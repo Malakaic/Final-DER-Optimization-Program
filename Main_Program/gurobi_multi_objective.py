@@ -4,7 +4,9 @@ import pandas as pd
 import config
 import os
 
-def optimization_algorithm():
+def optimization(self):
+
+
     # Parameters
     load_demand = config.load_demand # Total hourly load demand (kW)
     PowerTurbine = [config.wind_data_dict[i][1] for i in config.wind_data_dict]  # Wind turbine capacities (kW)

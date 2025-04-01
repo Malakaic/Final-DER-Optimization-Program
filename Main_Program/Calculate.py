@@ -164,7 +164,7 @@ class Calculate_Button(tk.Frame):
                         self.open_results_window(f"Error: {e}")
 
                 
-                gurobi_multi_objective.optimization_algorithm()
+                gurobi_multi_objective.optimization(self)
                 self.open_results_window(configurations)
             except ValueError as e:
                 self.open_results_window(f"Error: {e}")
