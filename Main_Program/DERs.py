@@ -69,7 +69,7 @@ class Der_menu_page (tk.Frame):
 
                         
                         # Text box for efficiency
-                        pv_efficiency_label = tk.Label(pv_frame, text="Cost ($/kW-DC):", anchor="w")
+                        pv_efficiency_label = tk.Label(pv_frame, text="Efficiency (%):", anchor="w")
                         pv_efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
                         pv_efficiency_entry = tk.Entry(pv_frame)
                         pv_efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
@@ -87,7 +87,7 @@ class Der_menu_page (tk.Frame):
                         
 
                         # Text box for cost
-                        pv_cost_label = tk.Label(pv_frame, text="Efficiency (%):", anchor="w")
+                        pv_cost_label = tk.Label(pv_frame, text="Cost ($/kW-DC):", anchor="w")
                         pv_cost_label.grid(row=5, column=0, sticky="w", padx=5)
                         pv_cost_entry = tk.Entry(pv_frame)
                         pv_cost_entry.grid(row=5, column=1, sticky="e", padx=5)

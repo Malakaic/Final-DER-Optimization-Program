@@ -11,8 +11,8 @@ def optimization_algorithm():
     PowerPV = [config.pv_data_dict[i][1] for i in config.pv_data_dict]  # Solar PV capacities (kW)
 
     # Cost per kWh for DER components
-    costTurbine = [float(config.wind_data_dict[i][6] for i in config.wind_data_dict)]  # Wind turbine costs
-    costPV = [float(config.pv_data_dict[i][5] for i in config.pv_data_dict)]  # Solar PV costs
+    costTurbine = [float(config.wind_data_dict[i][6]) for i in config.wind_data_dict]  # Wind turbine costs
+    costPV = [float(config.pv_data_dict[i][5]) for i in config.pv_data_dict]  # Solar PV costs
     costgrid = 0.01  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
