@@ -33,7 +33,5 @@ grid_rate = 0.0  # Default grid rate
 
 
 
-financial_weight = 25
-efficiency_weight = 25
-sustainability_weight = 25
-power_quality_weight = 25
+cost_weight = 50
+renewable_weight = 50
