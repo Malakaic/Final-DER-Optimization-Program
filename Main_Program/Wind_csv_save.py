@@ -75,7 +75,7 @@ def calculate_wind_power_with_columns(wind_speed_file, turbine_capacity, turbine
     """
     try:
         # Read CSV, skipping irrelevant rows and limiting the amount of data read
-        df = pd.read_csv(wind_speed_file, skiprows=2, usecols=lambda column: column not in ['Unnamed: 0'])
+        df = pd.read_csv(wind_speed_file, skiprows=1, usecols=lambda column: column not in ['Unnamed: 0'])
 
         # Check for necessary columns and extract wind speed
         required_columns = ['Year', 'Month', 'Day', 'Hour', 'Minute']

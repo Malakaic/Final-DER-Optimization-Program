@@ -55,35 +55,36 @@ class Der_menu_page (tk.Frame):
                         pv_name_entry.grid(row=0, column=1, sticky="e", padx=5)
 
                         # Text box for Size
-                        size_label = tk.Label(pv_frame, text="Size (kW-DC):", anchor="w")
-                        size_label.grid(row=1, column=0, sticky="w", padx=5)
-                        size_entry = tk.Entry(pv_frame)
-                        size_entry.grid(row=1, column=1, sticky="e", padx=5)
+                        pv_size_label = tk.Label(pv_frame, text="Size (kW-DC):", anchor="w")
+                        pv_size_label.grid(row=1, column=0, sticky="w", padx=5)
+                        pv_size_entry = tk.Entry(pv_frame)
+                        pv_size_entry.grid(row=1, column=1, sticky="e", padx=5)
 
 
                         # Text box for Lifespan
-                        lifespan_label = tk.Label(pv_frame, text="Lifespan (years):", anchor="w")
-                        lifespan_label.grid(row=2, column=0, sticky="w", padx=5)
-                        lifespan_entry = tk.Entry(pv_frame)
-                        lifespan_entry.grid(row=2, column=1, sticky="e", padx=5)
+                        pv_lifespan_label = tk.Label(pv_frame, text="Lifespan (years):", anchor="w")
+                        pv_lifespan_label.grid(row=2, column=0, sticky="w", padx=5)
+                        pv_lifespan_entry = tk.Entry(pv_frame)
+                        pv_lifespan_entry.grid(row=2, column=1, sticky="e", padx=5)
 
                         
                         # Text box for efficiency
-                        efficiency_label = tk.Label(pv_frame, text="Cost ($/kW-DC):", anchor="w")
-                        efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
-                        efficiency_entry = tk.Entry(pv_frame)
-                        efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
+                        pv_efficiency_label = tk.Label(pv_frame, text="Cost ($/kW-DC):", anchor="w")
+                        pv_efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
+                        pv_efficiency_entry = tk.Entry(pv_frame)
+                        pv_efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
 
                         # Dropdown for Module type
                         module_type_label = tk.Label(pv_frame, text="Module Type:", anchor="w")
                         module_type_label.grid(row=4, column=0, sticky="w", padx=5)
+                    
                         
                         module_types = ["Monocrystalline", "Polycrystalline", "Thin-Film"]
                         module_type_var = tk.StringVar()
                         module_type_dropdown = ttk.Combobox(pv_frame, textvariable=module_type_var, values=module_types, state="readonly")
                         module_type_dropdown.grid(row=4, column=1, sticky="e", padx=5)
                         module_type_dropdown.current(0)  # Set default selection
-
+                        
 
                         # Text box for cost
                         pv_cost_label = tk.Label(pv_frame, text="Efficiency (%):", anchor="w")
@@ -97,13 +98,14 @@ class Der_menu_page (tk.Frame):
 
                             pv_data = [
                                 pv_name_entry.get(),  # Name
-                                size_entry.get(),     # Size
-                                lifespan_entry.get(), # Lifespan
-                                efficiency_entry.get(),# Efficiency
+                                pv_size_entry.get(),     # Size
+                                pv_lifespan_entry.get(), # Lifespan
+                                pv_efficiency_entry.get(),# Efficiency
                                 module_type_var.get(),# Module Type
                                 pv_cost_entry.get()     # Cost
                             ]
-                                                    
+
+                                            
                             if pv_data[4] == "Monocrystalline":
                                 pv_data[4] = int(0)
                             elif pv_data[4] == "Polycrystalline":
@@ -158,23 +160,23 @@ class Der_menu_page (tk.Frame):
                         wind_name_entry.grid(row=0, column=1, sticky="e", padx=5)
 
                         # "Size" label and entry
-                        size_label = tk.Label(wind_frame, text="Size (kW AC):", anchor="w")
-                        size_label.grid(row=1, column=0, sticky="w", padx=5)
-                        size_entry = tk.Entry(wind_frame)
-                        size_entry.grid(row=1, column=1, sticky="e", padx=5)
+                        wind_size_label = tk.Label(wind_frame, text="Size (kW AC):", anchor="w")
+                        wind_size_label.grid(row=1, column=0, sticky="w", padx=5)
+                        wind_size_entry = tk.Entry(wind_frame)
+                        wind_size_entry.grid(row=1, column=1, sticky="e", padx=5)
 
                         # "Lifespan" label and entry
-                        lifespan_label = tk.Label(wind_frame, text="Lifespan (years):", anchor="w")
-                        lifespan_label.grid(row=2, column=0, sticky="w", padx=5)
-                        lifespan_entry = tk.Entry(wind_frame)
-                        lifespan_entry.grid(row=2, column=1, sticky="e", padx=5)
+                        wind_lifespan_label = tk.Label(wind_frame, text="Lifespan (years):", anchor="w")
+                        wind_lifespan_label.grid(row=2, column=0, sticky="w", padx=5)
+                        wind_lifespan_entry = tk.Entry(wind_frame)
+                        wind_lifespan_entry.grid(row=2, column=1, sticky="e", padx=5)
 
 
                         # "Efficiency" label and entry
-                        efficiency_label = tk.Label(wind_frame, text="Efficiency (%):", anchor="w")
-                        efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
-                        efficiency_entry = tk.Entry(wind_frame)
-                        efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
+                        wind_efficiency_label = tk.Label(wind_frame, text="Efficiency (%):", anchor="w")
+                        wind_efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
+                        wind_efficiency_entry = tk.Entry(wind_frame)
+                        wind_efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
 
                         # "Hub Height" label and entry
                         hub_height_label = tk.Label(wind_frame, text="Hub Height (meters):", anchor="w")
@@ -199,9 +201,9 @@ class Der_menu_page (tk.Frame):
                             # Create a list with the data for the current turbine
                             wind_data = [
                                 wind_name_entry.get(),   # Name
-                                size_entry.get(),        # Size
-                                efficiency_entry.get(),   # Efficiency
-                                lifespan_entry.get(),    # Lifespan
+                                wind_size_entry.get(),        # Size
+                                wind_efficiency_entry.get(),   # Efficiency
+                                wind_lifespan_entry.get(),    # Lifespan
                                 hub_height_entry.get(),  # Hub Height
                                 rotor_diameter_entry.get(),  # Rotor Diameter
                                 turbine_cost_entry.get()  # Cost

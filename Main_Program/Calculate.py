@@ -161,6 +161,8 @@ class Calculate_Button(tk.Frame):
                         )
                     except ValueError as e:
                         self.open_results_window(f"Error: {e}")
+
+                
                 
                 self.open_results_window(configurations)
             except ValueError as e:
