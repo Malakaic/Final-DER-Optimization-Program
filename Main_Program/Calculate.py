@@ -7,6 +7,7 @@ import Wind_csv_save
 import Solar_PV_csv_save
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import gurobi_multi_objective
 import config
 #from Inputs import InputPage
 
@@ -163,10 +164,11 @@ class Calculate_Button(tk.Frame):
                         self.open_results_window(f"Error: {e}")
 
                 
-                
+                gurobi_multi_objective.optimization_algorithm()
                 self.open_results_window(configurations)
             except ValueError as e:
                 self.open_results_window(f"Error: {e}")
+        
         else:
             self.open_results_window("Error", "Could not retrieve coordinates.")
     print("Calculations completed.")

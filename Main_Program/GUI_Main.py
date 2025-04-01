@@ -23,7 +23,7 @@ class EnergyResourceApp(tk.Tk):
         self.main_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
         # Create the menu bar
-        self.menu = MenuBar(master)
+        self.menu = MenuBar(master, self)
 
         # Create the left side frame
         self.left_frame = ttk.Frame(self.main_frame)

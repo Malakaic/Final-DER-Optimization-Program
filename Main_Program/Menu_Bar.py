@@ -7,9 +7,10 @@ import config
 
 
 class MenuBar(tk.Frame):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.parent = parent
+    def __init__(self, master, app):
+        super().__init__(master)
+        
+        self.app = app
         self.create_menu()
 
     def create_menu(self):
@@ -82,89 +83,65 @@ class MenuBar(tk.Frame):
 
     # Save to CSV file function
     def save_to_csv(self):
-        """Save current entries to a CSV file."""
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
-                                                filetypes=[("CSV files", "*.csv")])
-        if file_path:
-            try:
-                with open(file_path, mode='w', newline='') as file:
-                    writer = csv.writer(file)
-                    # Write location data
-                    writer.writerow(["City", self.city_entry.get()])
-                    writer.writerow(["State", self.state_entry.get()])
-                    writer.writerow(["Country", self.country_entry.get()])
+        
+        """Save all GUI data to a CSV file."""
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        if not file_path:
+            return  # User canceled the save dialog
 
-                    # Write load demand data
-                    writer.writerow(["Load Choice", self.load_choice.get()])
-                    if self.load_choice.get() == "CSV Entry":
-                        writer.writerow(["CSV File Path", self.csv_entry.get()])
-                    else:
-                        for month, entry in self.monthly_entries.items():
-                            writer.writerow([month, entry.get()])
-                    writer.writerow(["Grid Rate", self.grid_rate_entry.get()])
+        # Collect data from GUI fields
+        data = {
+            "location": self.location_page.get_data(),  # Assuming `get_data` returns a dictionary of location data
+            "load_demand": self.load_page.get_data(),  # Assuming `get_data` returns a dictionary of load demand data
+            "objectives": self.objective_page.get_data(),  # Assuming `get_data` returns a dictionary of objectives
+            "der": self.der_page.get_data()  # Assuming `get_data` returns a dictionary of DER data
+        }
 
-                    # Write weighted objectives data
-                    writer.writerow(["Financial", self.financial_entry.get()])
-                    writer.writerow(["Efficiency", self.efficiency_obj_entry.get()])
-                    writer.writerow(["Sustainability", self.sustainability_entry.get()])
+        # Write data to CSV
+        with open(file_path, mode="w", newline="") as file:
+            writer = csv.writer(file)
+            for section, section_data in data.items():
+                writer.writerow([section])  # Write section name
+                for key, value in section_data.items():
+                    writer.writerow([key, value])  # Write key-value pairs
+                writer.writerow([])  # Blank line between sections
 
-                    # Write DER entries
-                    writer.writerow(["Name", "Type", "Cost", "Capacity", "Efficiency"])
-                    for child in self.der_tree.get_children():
-                        writer.writerow(self.der_tree.item(child)["values"])
-
-                messagebox.showinfo("Success", "Data saved successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Error saving file: {e}")
+        messagebox.showinfo("Save Data", "Data saved successfully!")
 
     # open CSV file function
     def open_csv(self):
-        """Open a CSV file and load the data into the app."""
-        file_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-        if file_path:
-            try:
-                with open(file_path, mode='r') as file:
-                    reader = csv.reader(file)
-                    for row in reader:
-                        if row[0] == "City":
-                            self.city_entry.delete(0, tk.END)
-                            self.city_entry.insert(0, row[1])
-                        elif row[0] == "State":
-                            self.state_entry.delete(0, tk.END)
-                            self.state_entry.insert(0, row[1])
-                        elif row[0] == "Country":
-                            self.country_entry.delete(0, tk.END)
-                            self.country_entry.insert(0, row[1])
-                        elif row[0] == "Grid Rate":
-                            self.grid_rate_entry.delete(0, tk.END)
-                            self.grid_rate_entry.insert(0, row[1])
-                        elif row[0] == "CSV File Path":
-                            self.csv_entry.config(state="normal")
-                            self.csv_entry.delete(0, tk.END)
-                            self.csv_entry.insert(0, row[1])
-                            self.csv_entry.config(state="disabled")
-                        elif row[0] in ["Financial", "Efficiency", "Sustainability"]:
-                            if row[0] == "Financial":
-                                self.financial_entry.delete(0, tk.END)
-                                self.financial_entry.insert(0, row[1])
-                            elif row[0] == "Efficiency":
-                                self.efficiency_obj_entry.delete(0, tk.END)
-                                self.efficiency_obj_entry.insert(0, row[1])
-                            elif row[0] == "Sustainability":
-                                self.sustainability_entry.delete(0, tk.END)
-                                self.sustainability_entry.insert(0, row[1])
-                        elif row[0] in self.monthly_entries.keys():
-                            # Correctly populate the monthly entries
-                            self.monthly_entries[row[0]].delete(0, tk.END)
-                            self.monthly_entries[row[0]].insert(0, row[1])
-                        elif row[0] == "Name":
-                            continue  # Skip the header for DER
-                        else:
-                            self.der_tree.insert("", "end", values=row)
+        """Load GUI data from a CSV file."""
+        file_path = filedialog.askopenfilename(
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")]
+        )
+        if not file_path:
+            return  # User canceled the open dialog
 
-                messagebox.showinfo("Success", "Data loaded successfully!")
-            except Exception as e:
-                messagebox.showerror("Error", f"Error opening file: {e}")
+        # Read data from CSV
+        data = {}
+        current_section = None
+        with open(file_path, mode="r") as file:
+            reader = csv.reader(file)
+            for row in reader:
+                if not row:
+                    continue  # Skip blank lines
+                if len(row) == 1:  # Section name
+                    current_section = row[0]
+                    data[current_section] = {}
+                elif current_section and len(row) == 2:  # Key-value pair
+                    key, value = row
+                    data[current_section][key] = value
+
+        # Populate GUI fields with loaded data
+        self.location_page.set_data(data.get("location", {}))  # Assuming `set_data` populates location fields
+        self.load_page.set_data(data.get("load_demand", {}))  # Assuming `set_data` populates load demand fields
+        self.objective_page.set_data(data.get("objectives", {}))  # Assuming `set_data` populates objectives
+        self.der_page.set_data(data.get("der", {}))  # Assuming `set_data` populates DER fields
+
+        messagebox.showinfo("Load Data", "Data loaded successfully!")
 
     def clear_all(self):
         """Clear all input fields."""
