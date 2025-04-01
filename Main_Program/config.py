@@ -28,7 +28,8 @@ battery_data_dict = {}  # Dictionary to store Battery data
 project_name = "MILP"  # Default project name
 
 # load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
-load_demand = [10000, 12000, 13000, 12000, 14000, 15000, 16000, 17000, 15000, 14000, 12000, 11000 ]  # List to store load demand data
+load_demand = []  # List to store load demand data
+grid_rate = 0.0  # Default grid rate
 
 
 

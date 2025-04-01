@@ -70,6 +70,7 @@ class Calculate_Button(tk.Frame):
         """Perform calculations, print results, and open results window."""
         # Prompt the user for the project name
         self.prompt_project_name()
+        print(config.load_demand)
 
     def prompt_project_name(self):
         """Prompt the user for the project name."""

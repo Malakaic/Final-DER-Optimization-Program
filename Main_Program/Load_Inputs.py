@@ -4,6 +4,7 @@ import tkinter as tk
 import requests
 from tkinter import filedialog, ttk 
 import Menu_Bar
+import config
 
 
 class LoadDemandSection(tk.Frame):
@@ -24,6 +25,11 @@ class LoadDemandSection(tk.Frame):
             entry = tk.Entry(load_frame)
             entry.grid(row=i, column=1, padx=5)
             self.monthly_entries[month] = entry
+        
+       
+
+
+        
 
         # Create a new grid rate input section below monthly entries
         tk.Label(load_frame, text="Grid Rate ($/kWh):").grid(row=12, column=0, padx=5, pady=(10, 0))  # CHANGED row=13 -> row=12
@@ -33,3 +39,14 @@ class LoadDemandSection(tk.Frame):
         # Properly configure row stretching to allow space for both sections
         frame.grid_rowconfigure(0, weight=1)  # Location Section
         frame.grid_rowconfigure(1, weight=1)  # Load Demand Section
+
+        # Function to save the load demand values to config
+        def save_load_demand():
+            config.load_demand = [float(self.monthly_entries[month].get() or 0) for month in self.monthly_entries]
+            config.grid_rate = float(self.grid_rate_entry.get() or 0)
+            print("Load demand saved:", config.load_demand)  # Debugging output
+            print("Grid rate saved:", config.grid_rate)
+
+        # Add a button to save the load demand
+        save_button = tk.Button(load_frame, text="Save Load Demand", command=save_load_demand)
+        save_button.grid(row=14, column=0, columnspan=2, pady=10)
