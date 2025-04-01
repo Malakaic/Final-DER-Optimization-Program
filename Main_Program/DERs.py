@@ -105,11 +105,11 @@ class Der_menu_page (tk.Frame):
                             ]
                                                     
                             if pv_data[4] == "Monocrystalline":
-                                pv_data[4] = 0
+                                pv_data[4] = int(0)
                             elif pv_data[4] == "Polycrystalline":
-                                pv_data[4] = 1
+                                pv_data[4] = int(1)
                             elif pv_data[4] == "Thin-Film":
-                                pv_data[4] = 2
+                                pv_data[4] = int(2)
 
                             """
                             # Validate input values (ensure all fields are filled)
