@@ -26,11 +26,13 @@ wind_lifespan = 20  # Lifespan of wind turbines in years
 battery_data_dict = {}  # Dictionary to store Battery data
 
 # Initialize an empty list to store configurations
-project_name = "Default"  # Default project name
+project_name = "Default_project"  # Default project name
 
 # load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
-load_demand = []  # List to store load demand data
-grid_rate = 0.0  # Default grid rate
+# load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
+#load_demand = [1000, 1200, 1300, 1200, 1400, 1500, 1600, 1700, 1500, 1400, 1200, 1100 ]  # List to store load demand data
+load_demand = []
+grid_rate = 0.1  # Default grid rate
 
 
 

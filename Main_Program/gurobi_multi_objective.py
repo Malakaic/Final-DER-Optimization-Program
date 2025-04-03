@@ -5,19 +5,14 @@ import config
 import os
 
 def optimization(self):
-
-    print(f"PV configurations: {config.pv_data_dict}")
-    print(f"Wind configurations: {config.wind_data_dict}")
-    print(f"")
-
     # Parameters
     load_demand = config.load_demand # Total hourly load demand (kW)
     PowerTurbine = [config.wind_data_dict[i][1] for i in config.wind_data_dict]  # Wind turbine capacities (kW)
     PowerPV = [config.pv_data_dict[i][1] for i in config.pv_data_dict]  # Solar PV capacities (kW)
 
     # Cost per kWh for DER components
-    costTurbine = [float(config.wind_data_dict[i][6]) for i in config.wind_data_dict]  # Wind turbine costs
-    costPV = [float(config.pv_data_dict[i][5]) for i in config.pv_data_dict]  # Solar PV costs
+    costTurbine = [config.wind_data_dict[i][6] for i in config.wind_data_dict]  # Wind turbine costs
+    costPV = [config.pv_data_dict[i][5] for i in config.pv_data_dict]  # Solar PV costs
     costgrid = 0.01  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
@@ -31,9 +26,10 @@ def optimization(self):
     # Construct the file paths using the project name
     project_folder = os.path.join(os.getcwd(), config.project_name)
 
-    # Objective Weights
-    weight_cost = 0.7
-    weight_renewable = 0.3
+
+
+    print(f"PV Configurations: {config.pv_data_dict}")
+    print(f"Wind Configurations: {config.wind_data_dict}")
 
 
     solar_files = [f for f in os.listdir(project_folder) if f.endswith("_solar_data_saved.csv")]
@@ -124,12 +120,12 @@ def optimization(self):
 
         # Constraint to limit actual solar power to available solar power
         model.addConstr(
-            actual_solar_power_used[i] <= gp.quicksum(
-                selected_pv_type[j] * num_pvs * row[f"PV-{j+1} Solar Power"] for j in range(len(PowerPV))
-            ),
-            name=f"LimitSolarPower_{i}"
+                actual_solar_power_used[i] <= gp.quicksum(
+                    selected_pv_type[j] * num_pvs * row[f"PV-{j+1} Solar Power"] for j in range(len(PowerPV))
+                ),
+                name=f"LimitSolarPower_{i}"
         )
-
+        
         # Load balance constraint considering available wind and actual solar power
         model.addConstr(
             available_wind_power + actual_solar_power_used[i] + grid_energy[i] == current_load_demand,
@@ -181,6 +177,7 @@ def optimization(self):
     total_cost = average_turbine_cost + average_pv_cost + grid_cost
 
     # Total renewable power used in each time step
+    """
     renewable_power = gp.quicksum(
         actual_solar_power_used[i] + gp.quicksum(
             selected_turbine_type[j] * num_turbines * power_data.loc[i, f"Turbine-{j+1} Power"]
@@ -188,18 +185,27 @@ def optimization(self):
         )
         for i in range(len(power_data))
     )
+    """
 
-
+    # Total energy demand for all time steps
+    #total_energy_demand = load_demand * len(power_data)
 
     # Calculate the total energy demand for all time steps
     total_energy_demand = sum(load_demand[int(row["Month"])-1] for _, row in power_data.iterrows())
 
-  
+    # Renewable fraction
+    #renewable_fraction = renewable_power / total_energy_demand
 
-    actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
+
+    #actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
+    actual_pv_power = gp.quicksum(
+        selected_pv_type[j] * num_pvs * power_data[f"PV-{j+1} Solar Power"].sum()
+        for j in range(len(PowerPV))
+    )
     actual_wind_power = sum(selected_turbine_type[j] * num_turbines * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine)))
     total_renewable_power_production = actual_pv_power + actual_wind_power
 
+    total_generation = total_renewable_power_production + gp.quicksum(grid_energy[i] for i in range(len(power_data)))
 
 
 
@@ -213,7 +219,6 @@ def optimization(self):
     model.optimize()
     C_max = model.ObjVal
 
-    
     # Minimum Renewable Fraction
     model.setObjective(total_renewable_power_production, GRB.MINIMIZE)
     model.optimize()
@@ -230,17 +235,11 @@ def optimization(self):
     def normalize_renewable(renewable_value):
         return (renewable_value - R_min) / (R_max - R_min)
 
+    cost_normalized = normalize_cost(total_cost)
     renewable_normalized = normalize_renewable(total_renewable_power_production)
 
-    cost_normalized = normalize_cost(total_cost)
-    """
-    if R_max == R_min:
-        renewable_normalized = 1
-    else:
-        renewable_normalized = normalize_renewable(total_renewable_power_production)
-    """
     # Solve model
-    model.setObjective(weight_cost * cost_normalized + weight_renewable * renewable_normalized, GRB.MAXIMIZE)
+    model.setObjective(config.cost_weight * cost_normalized + config.renewable_weight * renewable_normalized, GRB.MAXIMIZE)
     model.optimize()
 
     # Store results
