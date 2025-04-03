@@ -230,7 +230,7 @@ class Der_menu_page (tk.Frame):
                                 config.wind_counter += 1
 
                         wind_save_button = tk.Button(wind_frame, text="Save", command=save_wind_data)
-                        wind_save_button.grid(row=6, column=0, columnspan=2, pady=10)
+                        wind_save_button.grid(row=7, column=0, columnspan=2, pady=10)
 
                     if option == "Battery":
                         # A container for the layout of all Battery-specific inputs
