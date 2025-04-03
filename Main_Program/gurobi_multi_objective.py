@@ -6,6 +6,9 @@ import os
 
 def optimization(self):
 
+    print(f"PV configurations: {config.pv_data_dict}")
+    print(f"Wind configurations: {config.wind_data_dict}")
+    print(f"")
 
     # Parameters
     load_demand = config.load_demand # Total hourly load demand (kW)
@@ -187,21 +190,16 @@ def optimization(self):
     )
 
 
-    # Total energy demand for all time steps
-    #total_energy_demand = load_demand * len(power_data)
 
     # Calculate the total energy demand for all time steps
     total_energy_demand = sum(load_demand[int(row["Month"])-1] for _, row in power_data.iterrows())
 
-    # Renewable fraction
-    renewable_fraction = renewable_power / total_energy_demand
-
+  
 
     actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
     actual_wind_power = sum(selected_turbine_type[j] * num_turbines * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine)))
     total_renewable_power_production = actual_pv_power + actual_wind_power
 
-    total_generation = total_renewable_power_production + gp.quicksum(grid_energy[i] for i in range(len(power_data)))
 
 
 
@@ -215,6 +213,7 @@ def optimization(self):
     model.optimize()
     C_max = model.ObjVal
 
+    
     # Minimum Renewable Fraction
     model.setObjective(total_renewable_power_production, GRB.MINIMIZE)
     model.optimize()
@@ -231,9 +230,15 @@ def optimization(self):
     def normalize_renewable(renewable_value):
         return (renewable_value - R_min) / (R_max - R_min)
 
-    cost_normalized = normalize_cost(total_cost)
     renewable_normalized = normalize_renewable(total_renewable_power_production)
 
+    cost_normalized = normalize_cost(total_cost)
+    """
+    if R_max == R_min:
+        renewable_normalized = 1
+    else:
+        renewable_normalized = normalize_renewable(total_renewable_power_production)
+    """
     # Solve model
     model.setObjective(weight_cost * cost_normalized + weight_renewable * renewable_normalized, GRB.MAXIMIZE)
     model.optimize()
