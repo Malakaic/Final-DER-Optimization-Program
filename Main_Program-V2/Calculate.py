@@ -7,8 +7,9 @@ import Wind_csv_save
 import Solar_PV_csv_save
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from gurobi_multi_objective import dictionary_transfer # Importing the configurations from gurobi_multi_objective
+#from gurobi_multi_objective import optimtioniza # Importing the configurations from gurobi_multi_objective
 import config
+from config import dictionary_transfer
 #from Inputs import InputPage
 
 """"
@@ -20,6 +21,7 @@ configurations = [
 ]
 """
 configurations = dictionary_transfer # This will be the configurations from gurobi_multi_objective
+
 class Calculate_Button(tk.Frame):
     def __init__(self, parent,location_page):
         super().__init__(parent)
