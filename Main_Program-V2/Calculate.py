@@ -7,7 +7,7 @@ import Wind_csv_save
 import Solar_PV_csv_save
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-#from gurobi_multi_objective import optimtioniza # Importing the configurations from gurobi_multi_objective
+import gurobi_multi_objective 
 import config
 from config import dictionary_transfer
 #from Inputs import InputPage
