@@ -3,6 +3,7 @@ from gurobipy import GRB
 import pandas as pd
 import config
 import os
+import datetime
 
 def optimization(self):
     # Parameters
@@ -11,8 +12,8 @@ def optimization(self):
     PowerPV = [config.pv_data_dict[i][1] for i in config.pv_data_dict]  # Solar PV capacities (kW)
 
     # Cost per kWh for DER components
-    costTurbine = [config.wind_data_dict[i][6] for i in config.wind_data_dict]  # Wind turbine costs
-    costPV = [config.pv_data_dict[i][5] for i in config.pv_data_dict]  # Solar PV costs
+    costTurbine = [int(config.wind_data_dict[i][6]) for i in config.wind_data_dict]  # Wind turbine costs
+    costPV = [int(config.pv_data_dict[i][5]) for i in config.pv_data_dict]  # Solar PV costs
     costgrid = 0.01  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
@@ -25,7 +26,7 @@ def optimization(self):
 
     # Construct the file paths using the project name
     project_folder = os.path.join(os.getcwd(), config.project_name)
-
+    
 
 
     print(f"PV Configurations: {config.pv_data_dict}")
@@ -202,12 +203,13 @@ def optimization(self):
 
 
     #actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
-    actual_pv_power = gp.quicksum(
-        selected_pv_type[j] * num_pvs * power_data[f"PV-{j+1} Solar Power"].sum()
-        for j in range(len(PowerPV))
-    )
+    actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
+
     actual_wind_power = gp.quicksum(selected_turbine_type[j] * num_turbines * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine)))
-    total_renewable_power_production = actual_pv_power + actual_wind_power
+    total_renewable_power_production = gp.quicksum(
+        actual_solar_power_used[i] + actual_wind_power_used[i]
+        for i in range(len(power_data))
+    )
 
     total_generation = total_renewable_power_production + gp.quicksum(grid_energy[i] for i in range(len(power_data)))
 
@@ -263,6 +265,11 @@ def optimization(self):
         # Add original wind power data
         for idx in range(len(wind_files)):
             result_row.append(row.get(f"Turbine-{idx+1} Power", 0))
+            
+        current_month = int(row["Month"]) - 1  # Adjust for zero-based index
+        load_value = load_demand[current_month]
+        result_row.append(load_value)  # Add the load value to the row
+
         # Calculate actual power used from selected components
         actual_pv_power = sum(selected_pv_type[j].x * num_pvs.x * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
         actual_wind_power = sum(selected_turbine_type[j].x * num_turbines.x * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine)))
@@ -281,6 +288,7 @@ def optimization(self):
     columns = ["Month", "Day", "Hour"]
     columns.extend([f"Original-PV-{idx+1} Solar Power" for idx in range(len(solar_files))])
     columns.extend([f"Original-Turbine-{idx+1} Power" for idx in range(len(wind_files))])
+    columns.append("Load Value")  # Add the new column for load value
     columns.extend(["Actual-PV-Power", "Actual-Wind-Turbine-Power", "Grid-Consumption", "Optimized-PV-Hourly-Cost", "Optimized-Turbine-Hourly-Cost", "Hourly-Grid-Cost"])
 
     # Convert results to DataFrame
@@ -290,11 +298,10 @@ def optimization(self):
     output_df.to_excel("DER_Optimization_Results_Final_Version.xlsx", index=False)
 
     # Print selected turbine and PV
+    
     selected_turbine_idx = [j for j in range(len(PowerTurbine)) if selected_turbine_type[j].x > 0.5]
     selected_pv_idx = [j for j in range(len(PowerPV)) if selected_pv_type[j].x > 0.5]
 
-    selected_turbine_values = [config.wind_data_dict[j][0] for j in selected_turbine_idx]
-    selected_pv_values = [config.pv_data_dict[j][0] for j in selected_pv_idx]
 
     print(f"total cost: {total_cost.getValue()}")
     print(f"total renewable power: {total_renewable_power_production.getValue()}")
@@ -305,6 +312,13 @@ def optimization(self):
     print(f"Normalized Cost: {cost_normalized.getValue()}")
     print(f"Normalized Renewable: {renewable_normalized.getValue()}")
 
+    # Map indices to keys in pv_data_dict
+    pv_keys = list(config.pv_data_dict.keys())  # Get the list of keys
+    selected_pv_values = [config.pv_data_dict[pv_keys[j]][0] for j in selected_pv_idx]
+
+    # Map indices to keys in wind_data_dict
+    wind_keys = list(config.wind_data_dict.keys())  # Get the list of keys
+    selected_turbine_values = [config.wind_data_dict[wind_keys[j]][0] for j in selected_turbine_idx]
 
 
     print(f"Selected Turbine(s): {selected_turbine_values}")
@@ -339,3 +353,4 @@ def optimization(self):
 
     print(f"Total yearly PV energy generated (actual): {total_yearly_pv_energy}")
     print(f"Total yearly wind energy generated (actual): {total_yearly_wind_energy}")
+   

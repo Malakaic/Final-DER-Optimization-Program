@@ -5,6 +5,7 @@ import numpy as np
 import json
 import time
 import config
+import datetime
 
 #cache = {}
 
@@ -45,6 +46,8 @@ def solar_function(self, latitude, longitude, pv_name_user, system_capacity_user
     folder_name = config.project_name
     project_dir = os.getcwd()
     folder_path = os.path.join(project_dir, folder_name)
+    
+
     os.makedirs(folder_path, exist_ok=True)
 
     # Define file paths
