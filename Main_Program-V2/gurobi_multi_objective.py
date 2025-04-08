@@ -115,14 +115,12 @@ def optimization(self):
         current_month = int(row["Month"])-1
         current_load_demand = load_demand[current_month]  # Adjust for zero-based index
 
-        model.addConstr(
-            actual_wind_power_used[i] <= gp.quicksum(
-                selected_turbine_type[j] * num_turbines * row[f"Turbine-{j+1} Power"] for j in range(len(PowerTurbine))
-            ),
-            name=f"LimitWindPower_{i}"
+        available_wind_power = gp.quicksum(
+            selected_turbine_type[j] * num_turbines * row[f"Turbine-{j+1} Power"] for j in range(len(PowerTurbine))
         )
 
         # Constraint to limit actual solar power to available solar power
+        
         model.addConstr(
                 actual_solar_power_used[i] <= gp.quicksum(
                     selected_pv_type[j] * num_pvs * row[f"PV-{j+1} Solar Power"] for j in range(len(PowerPV))
@@ -132,7 +130,7 @@ def optimization(self):
         
         # Load balance constraint considering available wind and actual solar power
         model.addConstr(
-            actual_wind_power_used[i] + actual_solar_power_used[i] + grid_energy[i] == current_load_demand,
+            available_wind_power + actual_solar_power_used[i] + grid_energy[i] == current_load_demand,
             name=f"LoadBalance_{i}"
         )
 
@@ -202,10 +200,8 @@ def optimization(self):
 
 
     #actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
-    actual_pv_power = gp.quicksum(
-        selected_pv_type[j] * num_pvs * power_data[f"PV-{j+1} Solar Power"].sum()
-        for j in range(len(PowerPV))
-    )
+    actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
+
     actual_wind_power = gp.quicksum(selected_turbine_type[j] * num_turbines * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine)))
     total_renewable_power_production = actual_pv_power + actual_wind_power
 
