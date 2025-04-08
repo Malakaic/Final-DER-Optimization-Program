@@ -12,6 +12,9 @@ import datetime
 
 def solar_function(self, latitude, longitude, pv_name_user, system_capacity_user, module_type_user):
     # API Parameter Definitions
+    if not config.timestamped_folder:
+        raise ValueError("The timestamped folder has not been initialized. Ensure it is set before calling this function.")
+
     solar_data_file = os.path.join(config.timestamped_folder, f"{pv_name_user}_solar_data_saved.csv")
 
     print("Solar Function Called")
@@ -43,12 +46,6 @@ def solar_function(self, latitude, longitude, pv_name_user, system_capacity_user
     array_type = 1  # Fixed array type - Required (0 = fixed - open rack, 1 = fixed - roof mount, 2 = 1-axis, 3 = 1-axis backtracking, 4 = 2-axis )
 
     dataset = "nsrdb"  # Dataset to use - TMY data
-
-    # Set the folder path for "Environmental Data"
-    folder_name = config.project_name
-    project_dir = os.getcwd()
-    folder_path = os.path.join(project_dir, folder_name)
-    
 
     # Download the CSV data (always overwrite)
     download_solar_csv(api_key, lat, lon, system_capacity, azimuth, tilt, losses, array_type, module_type, dataset, solar_data_file, pv_name)

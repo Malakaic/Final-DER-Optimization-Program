@@ -24,20 +24,7 @@ def optimization(self):
     turbine_max = 4
     PV_max = 1000
 
-    # Construct the file paths using the project name
-    project_folder = os.path.join(os.getcwd(), config.project_name)
-
-    # Generate a timestamped folder name
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    timestamped_folder = os.path.join(project_folder, timestamp)
-
-    # Create the timestamped folder
-    os.makedirs(timestamped_folder, exist_ok=True)
-
-    # Update the config with the timestamped folder path
-    config.timestamped_folder = timestamped_folder
-
-
+    timestamped_folder = config.timestamped_folder
 
     print(f"PV Configurations: {config.pv_data_dict}")
     print(f"Wind Configurations: {config.wind_data_dict}")

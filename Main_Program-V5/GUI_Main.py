@@ -10,6 +10,7 @@ from DERs import Der_menu_page
 from Calculate import Calculate_Button
 from Load_Inputs import LoadDemandSection
 from Location_Input import Location
+import datetime
 
 
 
@@ -17,6 +18,7 @@ class EnergyResourceApp(tk.Tk):
     def __init__(self, master):
         self.master = master
         self.master.title("Energy Resource Optimization")
+        print("Initializing Energy Resource App...")
 
         # Create the main frame
         self.main_frame = ttk.Frame(self.master)

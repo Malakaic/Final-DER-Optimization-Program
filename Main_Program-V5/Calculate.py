@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import gurobi_multi_objective
 import config
+import datetime
 #from Inputs import InputPage
 
 # Example usage
@@ -97,7 +98,22 @@ class Calculate_Button(tk.Frame):
 
     def save_project_name(self):
         """Save the project name and proceed with calculations."""
+        print("Saving project name...")
         project_name = self.project_name_entry.get()
+        config.project_name = project_name
+        # Create the project folder path
+        project_folder = os.path.join(os.getcwd(), config.project_name)
+
+        # Generate a timestamped folder name
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamped_folder = os.path.join(project_folder, timestamp)
+
+        # Create the timestamped folder
+        os.makedirs(timestamped_folder, exist_ok=True)
+
+        # Update the config with the timestamped folder path
+        config.timestamped_folder = timestamped_folder
+
         if not project_name:
             config.project_name = "Default_Project"
             messagebox.showwarning("Warning", "Project name is empty. Using default name.")
