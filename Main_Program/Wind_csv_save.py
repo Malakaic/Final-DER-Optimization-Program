@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import time
 import config
+import datetime
 
 
 # Cache dictionary to hold previously fetched results
@@ -33,6 +34,7 @@ def wind_function_main(self, latitude, longitude, turbine_name_user, turbine_cap
     folder_name = config.project_name
     project_dir = os.getcwd()
     folder_path = os.path.join(project_dir, folder_name)
+    
     os.makedirs(folder_path, exist_ok=True)
 
     # Define file paths
