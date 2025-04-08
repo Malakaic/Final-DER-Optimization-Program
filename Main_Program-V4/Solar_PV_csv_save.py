@@ -12,8 +12,6 @@ import datetime
 
 def solar_function(self, latitude, longitude, pv_name_user, system_capacity_user, module_type_user):
     # API Parameter Definitions
-    solar_data_file = os.path.join(config.timestamped_folder, f"{pv_name_user}_solar_data_saved.csv")
-
     print("Solar Function Called")
     # Check if latitude and longitude are valid
     if not (isinstance(latitude, (int, float)) and isinstance(longitude, (int, float))):
@@ -49,6 +47,11 @@ def solar_function(self, latitude, longitude, pv_name_user, system_capacity_user
     project_dir = os.getcwd()
     folder_path = os.path.join(project_dir, folder_name)
     
+
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Define file paths
+    solar_data_file = os.path.join(folder_path, f"{pv_name}_solar_data_saved.csv")
 
     # Download the CSV data (always overwrite)
     download_solar_csv(api_key, lat, lon, system_capacity, azimuth, tilt, losses, array_type, module_type, dataset, solar_data_file, pv_name)

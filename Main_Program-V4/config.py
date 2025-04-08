@@ -23,7 +23,6 @@ battery_data_dict = {}  # Dictionary to store Battery data
 
 # Initialize an empty list to store configurations
 project_name = "Default_project"  # Default project name
-timestamped_folder = None
 
 # load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
 # load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
@@ -36,3 +35,4 @@ grid_rate = 0.1  # Default grid rate
 cost_weight = 50
 renewable_weight = 50
 
+dictionary_transfer =None # Dictionary to store the transfer of data between pages
