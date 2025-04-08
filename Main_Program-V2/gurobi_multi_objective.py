@@ -333,5 +333,13 @@ def optimization(self):
         for i in range(len(power_data))
     )
 
+    global dictionary_transfer
+    # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
+    dictionary_transfer = [{
+            'solar': selected_pv_values, 'solar_panels': num_pvs.x, 'turbine': selected_turbine_values, 'wind_turbines': num_turbines.x, 'price': total_cost.getValue()
+
+        }
+    ]
+    
     print(f"Total yearly PV energy generated (actual): {total_yearly_pv_energy}")
     print(f"Total yearly wind energy generated (actual): {total_yearly_wind_energy}")
