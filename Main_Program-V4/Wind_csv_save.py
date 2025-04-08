@@ -12,7 +12,6 @@ import datetime
 
 def wind_function_main(self, latitude, longitude, turbine_name_user, turbine_capacity_user, rotor_diameter_user, turbine_efficiency_user):
     # Check if latitude and longitude are valid
-
     if not (isinstance(latitude, (int, float)) and isinstance(longitude, (int, float))):
         raise ValueError("Latitude and longitude must be numeric.")
 
@@ -35,16 +34,11 @@ def wind_function_main(self, latitude, longitude, turbine_name_user, turbine_cap
     folder_name = config.project_name
     project_dir = os.getcwd()
     folder_path = os.path.join(project_dir, folder_name)
-
-    # Generate a timestamped folder name
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    timestamped_folder = os.path.join(folder_path, timestamp)
-
-    os.makedirs(timestamped_folder, exist_ok=True)
+    
+    os.makedirs(folder_path, exist_ok=True)
 
     # Define file paths
-    wind_speed_file = os.path.join(config.timestamped_folder, f"{wind_name_user}_wind_data_saved.csv")
-
+    wind_speed_file = os.path.join(folder_path, f"{turbine_name}_wind_data_saved.csv")
 
     # Download the CSV data (always overwrite)
     download_wind_csv(lon, lat, wind_data_type, year, user_email, api_key, wind_speed_file)

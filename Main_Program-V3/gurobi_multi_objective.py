@@ -34,6 +34,9 @@ def optimization(self):
     # Create the timestamped folder
     os.makedirs(timestamped_folder, exist_ok=True)
 
+    # Update the config with the timestamped folder path
+    config.timestamped_folder = timestamped_folder
+
 
 
     print(f"PV Configurations: {config.pv_data_dict}")
