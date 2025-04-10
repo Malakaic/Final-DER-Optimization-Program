@@ -14,7 +14,7 @@ def optimization(self):
     # Cost per kWh for DER components
     costTurbine = [int(config.wind_data_dict[i][6]) for i in config.wind_data_dict]  # Wind turbine costs
     costPV = [int(config.pv_data_dict[i][5]) for i in config.pv_data_dict]  # Solar PV costs
-    costgrid = 0.01  # Grid energy cost per kWh
+    costgrid = config.grid_rate  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
     turbine_lifespan_hours = 24 * 365 * config.wind_lifespan
@@ -178,25 +178,9 @@ def optimization(self):
     # total average levelized hourly cost of the system
     total_cost = average_turbine_cost + average_pv_cost + grid_cost
 
-    # Total renewable power used in each time step
-    """
-    renewable_power = gp.quicksum(
-        actual_solar_power_used[i] + gp.quicksum(
-            selected_turbine_type[j] * num_turbines * power_data.loc[i, f"Turbine-{j+1} Power"]
-            for j in range(len(PowerTurbine))
-        )
-        for i in range(len(power_data))
-    )
-    """
-
-    # Total energy demand for all time steps
-    #total_energy_demand = load_demand * len(power_data)
 
     # Calculate the total energy demand for all time steps
     total_energy_demand = sum(load_demand[int(row["Month"])-1] for _, row in power_data.iterrows())
-
-    # Renewable fraction
-    #renewable_fraction = renewable_power / total_energy_demand
 
 
     #actual_pv_power = sum(selected_pv_type[j] * num_pvs * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
@@ -349,6 +333,15 @@ def optimization(self):
         for i in range(len(power_data))
     )
 
+
+    global dictionary_transfer
+    # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
+    config.dictionary_transfer = [{
+            'solar': selected_pv_values, 'solar_panels': num_pvs.x, 'wind': selected_turbine_values, 'wind_turbines': num_turbines.x, 'price': total_cost.getValue()
+
+        }
+    ]
+    
     print(f"Total yearly PV energy generated (actual): {total_yearly_pv_energy}")
     print(f"Total yearly wind energy generated (actual): {total_yearly_wind_energy}")
    

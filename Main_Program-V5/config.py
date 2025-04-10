@@ -26,7 +26,7 @@ timestamped_folder = None
 
 # load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
 #load_demand = [10, 120, 1300, 1200, 140, 1500, 1600, 1700, 1500, 1400, 1200, 1100 ]  # List to store load demand data
-load_demand = []
+load_demand = {}
 grid_rate = 0.1  # Default grid rate
 
 
@@ -46,3 +46,4 @@ wind_data_existing_configurations = {
     2: ["Turbine-3", 3000, 22, 43.5, 100, 71, 4000]
 }
 
+dictionary_transfer = {} # Dictionary to store the transfer of data between pages

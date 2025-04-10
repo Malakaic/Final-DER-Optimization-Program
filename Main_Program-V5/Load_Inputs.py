@@ -25,11 +25,6 @@ class LoadDemandSection(tk.Frame):
             entry = tk.Entry(load_frame)
             entry.grid(row=i, column=1, padx=5)
             self.monthly_entries[month] = entry
-        
-       
-
-
-        
 
         # Create a new grid rate input section below monthly entries
         tk.Label(load_frame, text="Grid Rate ($/kWh):").grid(row=12, column=0, padx=5, pady=(10, 0))  # CHANGED row=13 -> row=12
