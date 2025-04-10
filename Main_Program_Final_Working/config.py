@@ -34,15 +34,3 @@ grid_rate = 0.1  # Default grid rate
 cost_weight = 50
 renewable_weight = 50
 
-pv_data_existing_configurations = {
-    0: ["Pv-1", 150, 20, 21.6, "Monocrystalline", 200], 
-    1: ["Pv-2", 200, 22, 22.4, "Polycrystalline", 250],
-    2: ["Pv-3", 250, 18, 25.7, "Thin-Film", 300]
-} 
-
-wind_data_existing_configurations = {
-    0: ["Turbine-1", 1500, 20, 55.7, 100, 65, 2000],
-    1: ["Turbine-2", 2000, 18, 67.8, 100, 72, 3000],
-    2: ["Turbine-3", 3000, 22, 43.5, 100, 71, 4000]
-}
-

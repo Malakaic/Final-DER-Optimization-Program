@@ -50,47 +50,47 @@ class Der_menu_page (tk.Frame):
 
                         # Text box for Name
                         pv_name_label = tk.Label(pv_frame, text="Name:", anchor="w")
-                        pv_name_label.grid(row=1, column=0, sticky="w", padx=5)
+                        pv_name_label.grid(row=0, column=0, sticky="w", padx=5)
                         pv_name_entry = tk.Entry(pv_frame)
-                        pv_name_entry.grid(row=1, column=1, sticky="e", padx=5)
+                        pv_name_entry.grid(row=0, column=1, sticky="e", padx=5)
 
                         # Text box for Size
                         pv_size_label = tk.Label(pv_frame, text="Size (kW-DC):", anchor="w")
-                        pv_size_label.grid(row=2, column=0, sticky="w", padx=5)
+                        pv_size_label.grid(row=1, column=0, sticky="w", padx=5)
                         pv_size_entry = tk.Entry(pv_frame)
-                        pv_size_entry.grid(row=2, column=1, sticky="e", padx=5)
+                        pv_size_entry.grid(row=1, column=1, sticky="e", padx=5)
 
 
                         # Text box for Lifespan
                         pv_lifespan_label = tk.Label(pv_frame, text="Lifespan (years):", anchor="w")
-                        pv_lifespan_label.grid(row=3, column=0, sticky="w", padx=5)
+                        pv_lifespan_label.grid(row=2, column=0, sticky="w", padx=5)
                         pv_lifespan_entry = tk.Entry(pv_frame)
-                        pv_lifespan_entry.grid(row=3, column=1, sticky="e", padx=5)
+                        pv_lifespan_entry.grid(row=2, column=1, sticky="e", padx=5)
 
                         
                         # Text box for efficiency
                         pv_efficiency_label = tk.Label(pv_frame, text="Efficiency (%):", anchor="w")
-                        pv_efficiency_label.grid(row=4, column=0, sticky="w", padx=5)
+                        pv_efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
                         pv_efficiency_entry = tk.Entry(pv_frame)
-                        pv_efficiency_entry.grid(row=4, column=1, sticky="e", padx=5)
+                        pv_efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
 
                         # Dropdown for Module type
                         module_type_label = tk.Label(pv_frame, text="Module Type:", anchor="w")
-                        module_type_label.grid(row=5, column=0, sticky="w", padx=5)
+                        module_type_label.grid(row=4, column=0, sticky="w", padx=5)
                     
                         
                         module_types = ["Monocrystalline", "Polycrystalline", "Thin-Film"]
                         module_type_var = tk.StringVar()
                         module_type_dropdown = ttk.Combobox(pv_frame, textvariable=module_type_var, values=module_types, state="readonly")
-                        module_type_dropdown.grid(row=5, column=1, sticky="e", padx=5)
+                        module_type_dropdown.grid(row=4, column=1, sticky="e", padx=5)
                         module_type_dropdown.current(0)  # Set default selection
                         
 
                         # Text box for cost
                         pv_cost_label = tk.Label(pv_frame, text="Cost ($/kW-DC):", anchor="w")
-                        pv_cost_label.grid(row=6, column=0, sticky="w", padx=5)
+                        pv_cost_label.grid(row=5, column=0, sticky="w", padx=5)
                         pv_cost_entry = tk.Entry(pv_frame)
-                        pv_cost_entry.grid(row=6, column=1, sticky="e", padx=5)
+                        pv_cost_entry.grid(row=5, column=1, sticky="e", padx=5)
 
 
                         def save_pv_data():
@@ -113,6 +113,15 @@ class Der_menu_page (tk.Frame):
                             elif pv_data[4] == "Thin-Film":
                                 pv_data[4] = int(2)
 
+                            """
+                            # Validate input values (ensure all fields are filled)
+                            if not all(pv_data):
+                                messagebox.showwarning("Input Error", "Please fill in all fields.")
+                                return
+                            """
+                            
+                            # Append the current configuration to the global list in config
+                            #config.pv_configurations.append(pv_data)
 
                             # Check if a save with the same name already exists
                             existing_key = None
@@ -133,89 +142,10 @@ class Der_menu_page (tk.Frame):
                                 config.pv_data_dict[config.pv_counter] = pv_data
                                 print(f"PV data saved: {pv_data}")
                                 config.pv_counter += 1
-                        
-                        def existing_PV_configurations():
-                            """Open a popup window to display existing PV configurations and allow selection."""
-                            # Create a new window to display existing configurations
-                            existing_window = tk.Toplevel(self.parent)
-                            existing_window.title("Existing PV Configurations")
-                            existing_window.geometry("700x400")
 
-                            # Create a Treeview to display the existing configurations
-                            tree = ttk.Treeview(existing_window, columns=("Name", "Size", "Lifespan", "Efficiency", "Module Type", "Cost"), show="headings")
-                            tree.heading("Name", text="Name")
-                            tree.heading("Size", text="Size (kW-DC)")
-                            tree.heading("Lifespan", text="Lifespan (years)")
-                            tree.heading("Efficiency", text="Efficiency (%)")
-                            tree.heading("Module Type", text="Module Type")
-                            tree.heading("Cost", text="Cost ($/kW-DC)")
-                            tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-                            # Define column widths
-                            tree.column("Name", width=100, anchor="center")
-                            tree.column("Size", width=100, anchor="center")
-                            tree.column("Lifespan", width=120, anchor="center")
-                            tree.column("Efficiency", width=120, anchor="center")
-                            tree.column("Module Type", width=150, anchor="center")
-                            tree.column("Cost", width=120, anchor="center")
-
-                            # Insert existing configurations into the Treeview
-                            for key, value in config.pv_data_existing_configurations.items():
-                                tree.insert("", "end", values=value)
-
-                            
-
-                            def select_pv_configuration():
-                                """Handle the selection of a configuration."""
-                                selected_item = tree.selection()
-                                if selected_item:
-                                    # Get the selected item's values
-                                    selected_values = list(tree.item(selected_item, "values"))  # Convert tuple to list
-                                    print(f"Selected PV Configuration: {selected_values}")
-
-                                    # Populate the PV input fields with the selected values
-                                    pv_name_entry.delete(0, tk.END)
-                                    pv_name_entry.insert(0, selected_values[0])  # Name
-                                    pv_size_entry.delete(0, tk.END)
-                                    pv_size_entry.insert(0, selected_values[1])  # Size
-                                    pv_lifespan_entry.delete(0, tk.END)
-                                    pv_lifespan_entry.insert(0, selected_values[2])  # Lifespan
-                                    pv_efficiency_entry.delete(0, tk.END)
-                                    pv_efficiency_entry.insert(0, selected_values[3])  # Efficiency
-                                    module_type_var.set(selected_values[4])  # Module Type
-                                    pv_cost_entry.delete(0, tk.END)
-                                    pv_cost_entry.insert(0, selected_values[5])  # Cost
-
-                                    
-                                    if selected_values[4] == "Monocrystalline":
-                                        selected_values[4] = int(0)
-                                    elif selected_values[4] == "Polycrystalline":
-                                        selected_values[4] = int(1)
-                                    elif selected_values[4] == "Thin-Film":
-                                        selected_values[4] = int(2)
-
-                                    # Save the selected configuration to the global dictionary
-                                    config.pv_data_dict[config.pv_counter] = list(selected_values)
-                                    config.pv_counter += 1
-                                    print(f"Selected configuration saved: {selected_values}")
-
-                                    # Close the popup window
-                                    existing_window.destroy()
-                                else:
-                                    messagebox.showwarning("Selection Error", "Please select a configuration.")
-                                # Add buttons to the popup window
-                            select_button = tk.Button(existing_window, text="Select Configuration", command=select_pv_configuration)
-                            select_button.pack(pady=10)
-
-                            close_button = tk.Button(existing_window, text="Close", command=existing_window.destroy)
-                            close_button.pack(pady=10)
-
-                        pv_configurations_button = tk.Button(pv_frame, text="Exisiting PV Configurations", command=existing_PV_configurations)
-                        pv_configurations_button.grid(row=0, column=0, columnspan=2, pady=10)
-
-
+                       
                         pv_save_button = tk.Button(pv_frame, text="Save", command=save_pv_data)
-                        pv_save_button.grid(row=8, column=0, columnspan=2, pady=10)
+                        pv_save_button.grid(row=6, column=0, columnspan=2, pady=10)
                         
 
                     if option == "Wind":
@@ -225,47 +155,46 @@ class Der_menu_page (tk.Frame):
 
                         # "Name" label and entry
                         wind_name_label = tk.Label(wind_frame, text="Name:", anchor="w")
-                        wind_name_label.grid(row=1, column=0, sticky="w", padx=5)
+                        wind_name_label.grid(row=0, column=0, sticky="w", padx=5)
                         wind_name_entry = tk.Entry(wind_frame)
-                        wind_name_entry.grid(row=1, column=1, sticky="e", padx=5)
+                        wind_name_entry.grid(row=0, column=1, sticky="e", padx=5)
 
                         # "Size" label and entry
                         wind_size_label = tk.Label(wind_frame, text="Size (kW AC):", anchor="w")
-                        wind_size_label.grid(row=2, column=0, sticky="w", padx=5)
+                        wind_size_label.grid(row=1, column=0, sticky="w", padx=5)
                         wind_size_entry = tk.Entry(wind_frame)
-                        wind_size_entry.grid(row=2, column=1, sticky="e", padx=5)
+                        wind_size_entry.grid(row=1, column=1, sticky="e", padx=5)
 
                         # "Lifespan" label and entry
                         wind_lifespan_label = tk.Label(wind_frame, text="Lifespan (years):", anchor="w")
-                        wind_lifespan_label.grid(row=3, column=0, sticky="w", padx=5)
+                        wind_lifespan_label.grid(row=2, column=0, sticky="w", padx=5)
                         wind_lifespan_entry = tk.Entry(wind_frame)
-                        wind_lifespan_entry.grid(row=3, column=1, sticky="e", padx=5)
+                        wind_lifespan_entry.grid(row=2, column=1, sticky="e", padx=5)
 
 
                         # "Efficiency" label and entry
                         wind_efficiency_label = tk.Label(wind_frame, text="Efficiency (%):", anchor="w")
-                        wind_efficiency_label.grid(row=4, column=0, sticky="w", padx=5)
+                        wind_efficiency_label.grid(row=3, column=0, sticky="w", padx=5)
                         wind_efficiency_entry = tk.Entry(wind_frame)
-                        wind_efficiency_entry.grid(row=4, column=1, sticky="e", padx=5)
+                        wind_efficiency_entry.grid(row=3, column=1, sticky="e", padx=5)
 
                         # "Hub Height" label and entry
                         hub_height_label = tk.Label(wind_frame, text="Hub Height (meters):", anchor="w")
-                        hub_height_label.grid(row=5, column=0, sticky="w", padx=5)
+                        hub_height_label.grid(row=4, column=0, sticky="w", padx=5)
                         hub_height_entry = tk.Entry(wind_frame)
-                        hub_height_entry.grid(row=5, column=1, sticky="e", padx=5)
+                        hub_height_entry.grid(row=4, column=1, sticky="e", padx=5)
 
                         # "Rotor Diameter" label and entry
                         rotor_diameter_label = tk.Label(wind_frame, text="Rotor Diameter (meters):", anchor="w")
-                        rotor_diameter_label.grid(row=6, column=0, sticky="w", padx=5)
+                        rotor_diameter_label.grid(row=5, column=0, sticky="w", padx=5)
                         rotor_diameter_entry = tk.Entry(wind_frame)
-                        rotor_diameter_entry.grid(row=6, column=1, sticky="e", padx=5)
+                        rotor_diameter_entry.grid(row=5, column=1, sticky="e", padx=5)
 
                         # "Cost" label and entry
                         turbine_cost_label = tk.Label(wind_frame, text="Cost ($/kWh):", anchor="w")
-                        turbine_cost_label.grid(row=7, column=0, sticky="w", padx=5)
+                        turbine_cost_label.grid(row=6, column=0, sticky="w", padx=5)
                         turbine_cost_entry = tk.Entry(wind_frame)
-                        turbine_cost_entry.grid(row=7, column=1, sticky="e", padx=5)
-
+                        turbine_cost_entry.grid(row=6, column=1, sticky="e", padx=5)
 
                         # Save Button for Wind
                         def save_wind_data():
@@ -300,88 +229,8 @@ class Der_menu_page (tk.Frame):
                                 print(f"Wind data saved: '{wind_data}'.")
                                 config.wind_counter += 1
 
-                        def existing_wind_configurations():
-                            """Open a popup window to display existing PV configurations and allow selection."""
-                            # Create a new window to display existing configurations
-                            existing_window = tk.Toplevel(self.parent)
-                            existing_window.title("Existing Wind Configurations")
-                            existing_window.geometry("700x400")
-
-                            # Create a Treeview to display the existing configurations
-                            
-                            tree = ttk.Treeview(existing_window, columns=("Name", "Size", "Lifespan", "Efficiency", "Hub Height", "Rotor Diameter", "Cost"), show="headings")
-                            tree.heading("Name", text="Name")
-                            tree.heading("Size", text="Size (kW)")
-                            tree.heading("Lifespan", text="Lifespan (years)")
-                            tree.heading("Efficiency", text="Efficiency (%)")
-                            tree.heading("Hub Height", text="Hub Height (m)")
-                            tree.heading("Rotor Diameter", text="Rotor Diameter (m)")
-                            tree.heading("Cost", text="Cost ($/kW-AC)")
-                            tree.pack(fill="both", expand=True, padx=10, pady=10)
-
-                            # Define column widths
-                            tree.column("Name", width=100, anchor="center")
-                            tree.column("Size", width=100, anchor="center")
-                            tree.column("Lifespan", width=120, anchor="center")
-                            tree.column("Efficiency", width=120, anchor="center")
-                            tree.column("Hub Height", width=150, anchor="center")
-                            tree.column("Rotor Diameter", width=150, anchor="center")
-                            tree.column("Cost", width=120, anchor="center")
-
-                            # Insert existing configurations into the Treeview
-                            for key, value in config.wind_data_existing_configurations.items():
-                                tree.insert("", "end", values=value)
-
-                            
-
-                            def select_wind_configuration():
-                                """Handle the selection of a configuration."""
-                                selected_item = tree.selection()
-                                if selected_item:
-                                    # Get the selected item's values
-                                    selected_values = list(tree.item(selected_item, "values"))  # Convert tuple to list
-                                    print(f"Selected Wind Turbine Configuration: {selected_values}")
-
-                                    # Populate the PV input fields with the selected values
-                                    wind_name_entry.delete(0, tk.END)
-                                    wind_name_entry.insert(0, selected_values[0])  # Name
-                                    wind_size_entry.delete(0, tk.END)
-                                    wind_size_entry.insert(0, selected_values[1])  # Size
-                                    wind_lifespan_entry.delete(0, tk.END)
-                                    wind_lifespan_entry.insert(0, selected_values[2])  # Lifespan
-                                    wind_efficiency_entry.delete(0, tk.END)
-                                    wind_efficiency_entry.insert(0, selected_values[3])  # Efficiency
-                                    hub_height_entry.delete(0, tk.END)  # Hub Height
-                                    hub_height_entry.insert(0, selected_values[4])  # Hub Height
-                                    rotor_diameter_entry.delete(0, tk.END)  # Rotor Diameter
-                                    rotor_diameter_entry.insert(0, selected_values[5])  # Rotor Diameter
-                                    turbine_cost_entry.delete(0, tk.END) 
-                                    turbine_cost_entry.insert(0, selected_values[6])  # Cost
-
-                                    # Save the selected configuration to the global dictionary
-                                    config.wind_data_dict[config.wind_counter] = list(selected_values)
-                                    config.wind_counter += 1
-                                    print(f"Selected configuration saved: {selected_values}")
-
-                                    # Close the popup window
-                                    existing_window.destroy()
-                                else:
-                                    messagebox.showwarning("Selection Error", "Please select a configuration.")
-                                # Add buttons to the popup window
-                            select_button = tk.Button(existing_window, text="Select Configuration", command=select_wind_configuration)
-                            select_button.pack(pady=10)
-
-                            close_button = tk.Button(existing_window, text="Close", command=existing_window.destroy)
-                            close_button.pack(pady=10)
-
-                        wind_configurations_button = tk.Button(wind_frame, text="Existing Wind Turbine Configurations", command=existing_wind_configurations)
-                        wind_configurations_button.grid(row=0, column=0, columnspan=2, pady=10)
-
                         wind_save_button = tk.Button(wind_frame, text="Save", command=save_wind_data)
-                        wind_save_button.grid(row=8, column=0, columnspan=2, pady=10)
-
-
-
+                        wind_save_button.grid(row=7, column=0, columnspan=2, pady=10)
 
                     if option == "Battery":
                         # A container for the layout of all Battery-specific inputs
