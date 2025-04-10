@@ -9,7 +9,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import gurobi_multi_objective
 import config
-from gurobi_multi_objective import dictionary_transfer # Importing the configurations from gurobi_multi_objective
+import gurobi_multi_objective 
+from config import dictionary_transfer
 #from Inputs import InputPage
 
 # Example Data for Output Display
@@ -22,7 +23,8 @@ configurations = [
     {'solar': 12, 'solar_panels': 48, 'wind': 18, 'wind_turbines': 7, 'battery': 35, 'battery_units': 18, 'inverter': 12, 'inverters': 2, 'price': 25000}
 ]
 """
-configurations = dictionary_transfer # This will be the configurations from gurobi_multi_objective
+ # This will be the configurations from gurobi_multi_objective
+
 
 
 class Calculate_Button(tk.Frame):
@@ -171,6 +173,7 @@ class Calculate_Button(tk.Frame):
 
                 
                 gurobi_multi_objective.optimization(self)
+                configurations = config.dictionary_transfer
                 self.open_results_window(configurations)
             except ValueError as e:
                 self.open_results_window(f"Error: {e}")
@@ -253,19 +256,19 @@ class Calculate_Button(tk.Frame):
             tk.Label(config_frame, text=f"Configuration {i}", font=('Helvetica', 14, 'bold')).pack(anchor='w')
             tk.Label(config_frame, text=f"Solar: {config['solar']} kW ({config['solar_panels']} panels)").pack(anchor='w')
             tk.Label(config_frame, text=f"Wind: {config['wind']} kW ({config['wind_turbines']} turbines)").pack(anchor='w')
-            tk.Label(config_frame, text=f"Battery: {config['battery']} kWh ({config['battery_units']} units)").pack(anchor='w')
-            tk.Label(config_frame, text=f"Inverter: {config['inverter']} kW ({config['inverters']} units)").pack(anchor='w')
+            #tk.Label(config_frame, text=f"Battery: {config['battery']} kWh ({config['battery_units']} units)").pack(anchor='w')
+            #tk.Label(config_frame, text=f"Inverter: {config['inverter']} kW ({config['inverters']} units)").pack(anchor='w')
             tk.Label(config_frame, text=f"Price: ${config['price']}").pack(anchor='w')
 
-            total_energy = config['solar'] + config['wind'] + config['battery']
-            total_energies.append(total_energy)
-            total_prices.append(config['price'])
+            #total_energy = config['solar'] + config['wind'] + config['battery']
+            #total_energies.append(total_energy)
+            #total_prices.append(config['price'])
             labels.append(f"Config {i}")
             
             solar_panels.append(config['solar_panels'])
             wind_turbines.append(config['wind_turbines'])
-            battery_units.append(config['battery_units'])
-            inverters.append(config['inverters'])
+            #battery_units.append(config['battery_units'])
+            #inverters.append(config['inverters'])
 
         # Create a single figure with 2x2 subplots (RIGHT SECTION)
         fig, ax = plt.subplots(2, 2, figsize=(7, 5))
@@ -288,10 +291,10 @@ class Calculate_Button(tk.Frame):
                     label='Solar Panels', color=component_colors["Solar Panels"])
         ax[1, 0].bar([i - width/2 for i in x], wind_turbines, width=width, 
                     label='Wind Turbines', color=component_colors["Wind Turbines"])
-        ax[1, 0].bar([i + width/2 for i in x], battery_units, width=width, 
-                    label='Battery Units', color=component_colors["Battery Units"])
-        ax[1, 0].bar([i + width*1.5 for i in x], inverters, width=width, 
-                    label='Inverters', color=component_colors["Inverters"])
+        #ax[1, 0].bar([i + width/2 for i in x], battery_units, width=width, 
+                    #label='Battery Units', color=component_colors["Battery Units"])
+        #ax[1, 0].bar([i + width*1.5 for i in x], inverters, width=width, 
+                    #label='Inverters', color=component_colors["Inverters"])
 
         ax[1, 0].set_xticks(x)
         ax[1, 0].set_xticklabels(labels)

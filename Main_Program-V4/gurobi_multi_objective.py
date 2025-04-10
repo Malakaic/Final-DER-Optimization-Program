@@ -355,8 +355,8 @@ def optimization(self):
 
     global dictionary_transfer
     # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
-    dictionary_transfer = [{
-            'solar': selected_pv_values, 'solar_panels': num_pvs.x, 'turbine': selected_turbine_values, 'wind_turbines': num_turbines.x, 'price': total_cost.getValue()
+    config.dictionary_transfer = [{
+            'solar': selected_pv_values, 'solar_panels': num_pvs.x, 'wind': selected_turbine_values, 'wind_turbines': num_turbines.x, 'price': total_cost.getValue()
 
         }
     ]

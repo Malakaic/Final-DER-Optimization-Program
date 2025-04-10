@@ -35,4 +35,4 @@ grid_rate = 0.1  # Default grid rate
 cost_weight = 50
 renewable_weight = 50
 
-dictionary_transfer =None # Dictionary to store the transfer of data between pages
+dictionary_transfer = {} # Dictionary to store the transfer of data between pages
