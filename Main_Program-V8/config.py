@@ -46,4 +46,4 @@ wind_data_existing_configurations = {
     2: ["Turbine-3", 3000, 22, 43.5, 100, 71, 4000]
 }
 
-dictionary_transfer = [] # Dictionary to store the transfer of data between pages
+dictionary_transfer = {} # Dictionary to store the transfer of data between pages
