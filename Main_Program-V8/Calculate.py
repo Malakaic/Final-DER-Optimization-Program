@@ -20,6 +20,9 @@ configurations = [
     {'solar': 12, 'solar_panels': 48, 'wind': 18, 'wind_turbines': 7, 'battery': 35, 'battery_units': 18, 'inverter': 12, 'inverters': 2, 'price': 25000}
 ]
 
+solar_options = ['pv1', 'pv2', 'pv3']
+wind_options = ['turbine1', 'turbine2', 'turbine3']
+
 class Calculate_Button(tk.Frame):
     def __init__(self, parent,location_page):
         super().__init__(parent)
@@ -246,47 +249,42 @@ class Calculate_Button(tk.Frame):
         labels = []
         solar_panels = []
         wind_turbines = []
-        battery_units = []
-        inverters = []
-        colors = ['blue', 'green', 'red', 'purple', 'orange', 'cyan']
-        component_colors = {
-                            "Solar Panels": "#FFD700",  # Yellow
-                            "Wind Turbines": "#E3E3E1",  # Pink
-                            "Battery Units": "#FA8D7D",  # Red
-                            "Inverters": "#DFFA7D"  # Purple
-                            }
 
+        colors = ['blue', 'green', 'red', 'purple']
+        component_colors = {
+            "Solar Panels": "#FFD700",
+            "Wind Turbines": "#87CEEB"
+        }
+
+        
         # Display configurations (LEFT SECTION)
         for i, config in enumerate(configurations, start=1):
             config_frame = ttk.Frame(scrollable_frame)
             config_frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
-            tk.Label(config_frame, text=f"Configuration {i}", font=('Helvetica', 14, 'bold')).pack(anchor='w')
-            tk.Label(config_frame, text=f"Solar: {config['solar']} kW ({config['solar_panels']} panels)").pack(anchor='w')
-            tk.Label(config_frame, text=f"Wind: {config['wind']} kW ({config['wind_turbines']} turbines)").pack(anchor='w')
-            """
-            tk.Label(config_frame, text=f"Battery: {config['battery']} kWh ({config['battery_units']} units)").pack(anchor='w')
-            tk.Label(config_frame, text=f"Inverter: {config['inverter']} kW ({config['inverters']} units)").pack(anchor='w')
-            """
-            tk.Label(config_frame, text=f"Price: ${config['price']}").pack(anchor='w')
-            
+            # Find selected solar and wind options
+            selected_solar = solar_options[config['solar'].index(1.0)]
+            selected_wind = wind_options[config['wind'].index(1.0)]
 
-            total_energy = config['solar'] + config['wind'] 
+            tk.Label(config_frame, text=f"Configuration {i}", font=('Helvetica', 14, 'bold')).pack(anchor='w')
+            tk.Label(config_frame, text=f"Solar: {selected_solar} ({config['solar_panels']} panels)").pack(anchor='w')
+            tk.Label(config_frame, text=f"Wind: {selected_wind} ({config['wind_turbines']} turbines)").pack(anchor='w')
+            tk.Label(config_frame, text=f"Price: ${config['price']}").pack(anchor='w')
+
+            total_energy = config['solar'] + config['wind']
             total_energies.append(total_energy)
             total_prices.append(config['price'])
             labels.append(f"Config {i}")
-            
+
             solar_panels.append(config['solar_panels'])
             wind_turbines.append(config['wind_turbines'])
-            #battery_units.append(config['battery_units'])
-            #inverters.append(config['inverters'])
 
         # Create a single figure with 2x2 subplots (RIGHT SECTION)
         fig, ax = plt.subplots(2, 2, figsize=(7, 5))
-        
+
         # Subplot 1: Total Energy per Configuration
         ax[0, 0].bar(labels, total_energies, color=colors[:len(labels)])
-        ax[0, 0].set_ylabel("Total Energy (kW+kWh)")
+        ax[0, 0].set_ylabel("Total Energy (kW)")
         ax[0, 0].set_title("Total Energy per Configuration")
 
         # Subplot 2: Total Cost per Configuration
@@ -294,22 +292,27 @@ class Calculate_Button(tk.Frame):
         ax[0, 1].set_ylabel("Total Cost ($)")
         ax[0, 1].set_title("Total Cost per Configuration")
 
+
+        combined_labels = []
+        for i, config in enumerate(configurations):
+            solar_label = solar_options[config['solar'].index(1.0)]  # Get the solar label
+            wind_label = wind_options[config['wind'].index(1.0)]  # Get the wind label
+            combined_labels.append(f"{solar_label} & {wind_label}")  # Combine solar and wind labels for each config
+       
         # Subplot 3: Component Count per Configuration
         width = 0.2
         x = range(len(labels))
+
+        # Update the plotting logic to use the component names for solar and wind
+        solar_names = [solar_options[config['solar'].index(1.0)] for config in configurations]
+        wind_names = [wind_options[config['wind'].index(1.0)] for config in configurations]
 
         ax[1, 0].bar([i - width*1.5 for i in x], solar_panels, width=width, 
                     label='Solar Panels', color=component_colors["Solar Panels"])
         ax[1, 0].bar([i - width/2 for i in x], wind_turbines, width=width, 
                     label='Wind Turbines', color=component_colors["Wind Turbines"])
-        """
-        ax[1, 0].bar([i + width/2 for i in x], battery_units, width=width, 
-                    label='Battery Units', color=component_colors["Battery Units"])
-        ax[1, 0].bar([i + width*1.5 for i in x], inverters, width=width, 
-                    label='Inverters', color=component_colors["Inverters"])
-        """
         ax[1, 0].set_xticks(x)
-        ax[1, 0].set_xticklabels(labels)
+        ax[1, 0].set_xticklabels(solar_names + wind_names)  # This combines the names for solar and wind components
         ax[1, 0].set_ylabel("Component Count")
         ax[1, 0].set_title("Component Count per Configuration")
         ax[1, 0].legend()
