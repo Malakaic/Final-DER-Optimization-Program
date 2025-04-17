@@ -23,9 +23,15 @@ def optimization(self):
     costgrid = config.grid_rate  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
-    turbine_lifespan_hours = 24 * 365 * config.wind_lifespan
-    pv_lifespan_hours = 24 * 365 * config.pv_lifespan
+    turbine_lifespan_hours = [24 * 365 * int(config.wind_data_dict[i][2]) for i in config.wind_data_dict]
+    pv_lifespan_hours = [24 * 365 * int(config.pv_data_dict[i][2]) for i in config.pv_data_dict]
 
+<<<<<<< HEAD
+    # DER Maximums
+    turbine_max = 100
+    PV_max = 2000
+=======
+>>>>>>> 5079750f0e8e7030ab7e9242a726dd167d132f92
 
     timestamped_folder = config.timestamped_folder
 
@@ -80,9 +86,19 @@ def optimization(self):
     # Initialize a list to store the best configurations
     best_configurations = []
 
+<<<<<<< HEAD
+    # Decision variables
+    selected_turbine_type = model.addVars(len(PowerTurbine), vtype=GRB.BINARY, name="SelectedTurbineType")
+    selected_pv_type = model.addVars(len(PowerPV), vtype=GRB.BINARY, name="SelectedPVType")
+    num_turbines = model.addVar(vtype=GRB.INTEGER, name="NumTurbines")
+    num_pvs = model.addVar(vtype=GRB.INTEGER, name="NumPVs")
+
+    grid_energy = model.addVars(len(power_data), vtype=GRB.CONTINUOUS, name="GridEnergy")
+=======
     for iteration in range(5):  # Iterate 5 times
         # Initialize model
         model = gp.Model("DER_Optimization")
+>>>>>>> 5079750f0e8e7030ab7e9242a726dd167d132f92
 
         # Decision variables
         selected_turbine_type = model.addVars(len(PowerTurbine), vtype=GRB.BINARY, name="SelectedTurbineType")
@@ -131,17 +147,136 @@ def optimization(self):
         total_turbine_hourly_cost = 0
         total_pv_hourly_cost = 0
 
+<<<<<<< HEAD
+    # Update the total renewable power production after optimization
+    total_renewable_power_production = sum(actual_solar_power_used[i] + actual_wind_power_used[i] for i in range(len(power_data)))
+
+    # Objective function
+    total_turbine_hourly_cost = 0
+    total_pv_hourly_cost = 0
+    total_grid_cost = 0
+
+    # Iterate through each hour in the dataset
+    for i, row in power_data.iterrows():
+        turbine_hourly_cost = gp.quicksum(
+            selected_turbine_type[j] * num_turbines * costTurbine[j] * row[f"Turbine-{j+1} Power"]
+            / turbine_lifespan_hours[j]
+            for j in range(len(PowerTurbine))
+        ) 
+
+        pv_hourly_cost = gp.quicksum(
+            selected_pv_type[j] * num_pvs * costPV[j] * row[f"PV-{j+1} Solar Power"]
+            / pv_lifespan_hours[j]
+            for j in range(len(PowerPV))
+        ) 
+
+        total_turbine_hourly_cost += turbine_hourly_cost
+        total_pv_hourly_cost += pv_hourly_cost
+
+    average_turbine_cost = total_turbine_hourly_cost / len(power_data)
+    average_pv_cost = total_pv_hourly_cost / len(power_data)
+
+    # levelized average grid cost
+    grid_cost = gp.quicksum(grid_energy[i] * costgrid for i in range(len(power_data))) / len(power_data)
+
+    # total average levelized hourly cost of the system
+    total_cost = average_turbine_cost + average_pv_cost + grid_cost
+
+    # Calculate the total energy demand for all time steps
+    total_energy_demand = sum(load_demand[int(row["Month"]) - 1] for _, row in power_data.iterrows())
+
+    # Minimum Cost
+    model.setObjective(total_cost, GRB.MINIMIZE)
+    model.optimize()
+    C_min = model.ObjVal
+
+    # Maximum Cost
+    model.setObjective(total_cost, GRB.MAXIMIZE)
+    model.optimize()
+    C_max = model.ObjVal
+
+    # Minimum Renewable Fraction
+    model.setObjective(total_renewable_power_production, GRB.MINIMIZE)
+    model.optimize()
+    R_min = model.ObjVal
+
+    # Maximum Renewable Fraction
+    model.setObjective(total_renewable_power_production, GRB.MAXIMIZE)
+    model.optimize()
+    R_max = model.ObjVal
+
+    def normalize_cost(cost_value):
+        return (C_max - cost_value) / (C_max - C_min)
+
+    def normalize_renewable(renewable_value):
+        return (renewable_value - R_min) / (R_max - R_min)
+
+    #normalized_cost = normalize_cost(C_min)
+    normalized_cost = normalize_cost(total_cost)
+    renewable_normalized = normalize_renewable(total_renewable_power_production)
+    model.Params.MIPGap = 0.1
+
+    # Store full results across all configurations
+    all_configurations_results = []
+
+    # Track previously selected DER combinations
+    previous_solutions = []
+
+    for k in range(4):  # We want 4 distinct configurations
+        # Set the final combined objective again
+        normalized_cost = normalize_cost(total_cost.getValue())
+        renewable_normalized = normalize_renewable(total_renewable_power_production.getValue())
+        penalty_expr = num_turbines + num_pvs
+        model.setObjective(config.cost_weight * normalized_cost + config.renewable_weight * renewable_normalized, GRB.MAXIMIZE)
+        
+        model.optimize()
+        if model.Status != GRB.OPTIMAL and model.Status != GRB.TIME_LIMIT:
+            print(f"Optimization for configuration {k+1} failed or was infeasible.")
+            break
+
+        # Extract which turbine and PV types were selected
+        turbine_selection = [j for j in range(len(PowerTurbine)) if selected_turbine_type[j].X > 0.5]
+        pv_selection = [j for j in range(len(PowerPV)) if selected_pv_type[j].X > 0.5]
+
+        print(f"\nSolution {k+1}:")
+        print(f"Selected Turbine Types: {turbine_selection}")
+        print(f"Selected PV Types: {pv_selection}")
+
+        # Collect results for each hour
+        configuration_results = []
+=======
         # Iterate through each hour in the dataset to calculate hourly costs
+>>>>>>> 5079750f0e8e7030ab7e9242a726dd167d132f92
         for i, row in power_data.iterrows():
             turbine_hourly_cost = gp.quicksum(
                 selected_turbine_type[j] * num_turbines * costTurbine[j] * row[f"Turbine-{j+1} Power"]
                 for j in range(len(PowerTurbine))
             ) / turbine_lifespan_hours
 
+<<<<<<< HEAD
+            selected_pv_cost = sum(
+                selected_pv_type[j].X * num_pvs.X * costPV[j] * row.get(f"PV-{j+1} Solar Power", 0) / pv_lifespan_hours[j]
+                for j in range(len(PowerPV))
+            )
+            selected_turbine_cost = sum(
+                selected_turbine_type[j].X * num_turbines.X * costTurbine[j] * row.get(f"Turbine-{j+1} Power", 0) / turbine_lifespan_hours[j]
+                for j in range(len(PowerTurbine))
+            )
+
+            result_row.extend([
+                actual_pv_power,
+                actual_wind_power,
+                grid_usage,
+                selected_pv_cost,
+                selected_turbine_cost,
+                grid_usage * costgrid
+            ])
+=======
             pv_hourly_cost = gp.quicksum(
                 selected_pv_type[j] * num_pvs * costPV[j] * row[f"PV-{j+1} Solar Power"]
                 for j in range(len(PowerPV))
             ) / pv_lifespan_hours
+>>>>>>> 5079750f0e8e7030ab7e9242a726dd167d132f92
 
             total_turbine_hourly_cost += turbine_hourly_cost
             total_pv_hourly_cost += pv_hourly_cost
@@ -152,8 +287,28 @@ def optimization(self):
         # Calculate grid cost
         grid_cost = gp.quicksum(grid_energy[i] * costgrid for i in range(len(power_data))) / len(power_data)
 
+<<<<<<< HEAD
+        
+        # Exclude current solution from next iterations
+        exclusion_expr = gp.quicksum(selected_turbine_type[j] for j in turbine_selection) + \
+                        gp.quicksum(selected_pv_type[j] for j in pv_selection)
+        model.addConstr(exclusion_expr <= len(turbine_selection) + len(pv_selection) - 1,
+                        name=f"Exclude_Solution_{k+1}")
+        
+
+                # Extract and print results
+        print(f"\n🌀 Configuration {k + 1} Summary:")
+        print(f"Selected Turbine(s): {[selected_turbine_type[j].X for j in range(len(PowerTurbine))]}")
+        print(f"Selected PV(s): {[selected_pv_type[j].X for j in range(len(PowerPV))]}")
+        print(f"Number of selected turbines: {num_turbines.X}")
+        print(f"Number of selected PVs: {num_pvs.X}")
+        print(f"Turbine installation cost: {average_turbine_cost.getValue():.2f}")
+        print(f"PV installation cost: {average_pv_cost.getValue():.2f}")
+        print(f"Grid yearly cost: {grid_cost.getValue():.2f}")
+=======
         # Total average levelized hourly cost of the system
         total_cost = total_turbine_hourly_cost + total_pv_hourly_cost + grid_cost
+>>>>>>> 5079750f0e8e7030ab7e9242a726dd167d132f92
 
         # Renewable power production
         total_renewable_power_production = gp.quicksum(
@@ -318,6 +473,32 @@ def optimization(self):
     wind_keys = list(config.wind_data_dict.keys())  # Get the list of keys
     selected_turbine_values = [config.wind_data_dict[wind_keys[j]][0] for j in selected_turbine_idx]
 
+<<<<<<< HEAD
+    output_excel_path = os.path.join(timestamped_folder, "DER_Optimization_Results_Final_Version.xlsx")
+
+
+    # Check if output_df is not empty
+    if not output_df.empty:
+        # Create an Excel writer object
+        with pd.ExcelWriter(output_excel_path, engine="openpyxl") as writer:
+            # Loop through each unique solution number
+            for solution_number in output_df["Solution Number"].unique():
+                # Filter the DataFrame for the current solution number
+                solution_df = output_df[output_df["Solution Number"] == solution_number]
+                
+                # Write the filtered DataFrame to a separate sheet
+                sheet_name = f"Solution_{int(solution_number)}"
+                solution_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+            # Optionally, write a summary sheet with all configurations
+            output_df.to_excel(writer, sheet_name="Summary", index=False)
+
+        print(f"\n✅ Optimization results for all configurations saved to: {output_excel_path}")
+    else:
+        print("\n⚠️ No data available in output_df to write to Excel.")
+
+=======
+>>>>>>> 5079750f0e8e7030ab7e9242a726dd167d132f92
 
     print(f"Selected Turbine(s): {selected_turbine_values}")
     print(f"Selected PV(s): {selected_pv_values}")

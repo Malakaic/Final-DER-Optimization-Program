@@ -25,9 +25,9 @@ timestamped_folder = None
 
 
 # load demand array (jan, feb, mar, apr, may, jun, jul, aug, sep, oct, nov, dec)
-#load_demand = [10, 120, 1300, 1200, 140, 1500, 1600, 1700, 1500, 1400, 1200, 1100 ]  # List to store load demand data
-load_demand = {}
-grid_rate = 0.1  # Default grid rate
+load_demand = [1000, 1200, 2000, 2500, 3200, 3800, 4000, 3500, 2800, 1400, 1200, 1100 ]  # List to store load demand data
+#load_demand = {}
+grid_rate = 0.01  # Default grid rate
 
 # DER Maximums
 turbine_max = 4

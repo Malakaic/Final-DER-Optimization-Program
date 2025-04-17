@@ -1,0 +1,9 @@
+pip install requests
+pip install openpyxl
+pip install pandas
+pip install csv
+pip install datetime
+pip install numpy
+
+pip install gurobipy - gurobipy requires user license installed seperately and included in the project directory with the valid license file
+

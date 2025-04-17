@@ -17,9 +17,15 @@ def optimization(self):
     costgrid = config.grid_rate  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
-    turbine_lifespan_hours = 24 * 365 * config.wind_lifespan
-    pv_lifespan_hours = 24 * 365 * config.pv_lifespan
+    turbine_lifespan_hours = [24 * 365 * int(config.wind_data_dict[i][2]) for i in config.wind_data_dict]
+    pv_lifespan_hours = [24 * 365 * int(config.pv_data_dict[i][2]) for i in config.pv_data_dict]
 
+<<<<<<< HEAD
+=======
+    # DER Maximums
+    turbine_max = 100
+    PV_max = 10000
+>>>>>>> 5a3bddeabda46aa3412c8aee033efa112235d366
 
     timestamped_folder = config.timestamped_folder
 
@@ -143,14 +149,15 @@ def optimization(self):
         # Calculate hourly turbine cost for this hour
         turbine_hourly_cost = gp.quicksum(
             selected_turbine_type[j] * num_turbines * costTurbine[j] * row[f"Turbine-{j+1} Power"]
+            / turbine_lifespan_hours[j]
             for j in range(len(PowerTurbine))
-        ) / turbine_lifespan_hours
+        ) 
 
-        # Calculate hourly PV cost for this hour
         pv_hourly_cost = gp.quicksum(
             selected_pv_type[j] * num_pvs * costPV[j] * row[f"PV-{j+1} Solar Power"]
+            / pv_lifespan_hours[j]
             for j in range(len(PowerPV))
-        ) / pv_lifespan_hours
+        ) 
 
         """
         grid_hourly_cost = gp.quicksum(
@@ -167,6 +174,8 @@ def optimization(self):
     # Average the total costs over the length of the dataset
     average_turbine_cost = total_turbine_hourly_cost / len(power_data)
     average_pv_cost = total_pv_hourly_cost / len(power_data)
+
+    total_yearly_cost = total_turbine_hourly_cost + total_pv_hourly_cost + gp.quicksum(grid_energy[i] * costgrid for i in range(len(power_data)))
 
 
     # levelized average grid cost
@@ -252,12 +261,21 @@ def optimization(self):
         actual_pv_power = sum(selected_pv_type[j].x * num_pvs.x * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV)))
         actual_wind_power = sum(selected_turbine_type[j].x * num_turbines.x * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine)))
         # Add actual power used and costs
+
+        selected_pv_cost = sum(
+                selected_pv_type[j].X * num_pvs.X * costPV[j] * row.get(f"PV-{j+1} Solar Power", 0) / pv_lifespan_hours[j]
+                for j in range(len(PowerPV))
+            )
+        selected_turbine_cost = sum(
+                selected_turbine_type[j].X * num_turbines.X * costTurbine[j] * row.get(f"Turbine-{j+1} Power", 0) / turbine_lifespan_hours[j]
+                for j in range(len(PowerTurbine))
+            )
         result_row.extend([
             actual_pv_power,
             actual_wind_power,
             grid_usage,
-            sum(selected_pv_type[j].x * num_pvs.x * costPV[j] * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV))) / pv_lifespan_hours,
-            sum(selected_turbine_type[j].x * num_turbines.x * costTurbine[j] * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine))) / turbine_lifespan_hours,
+            selected_pv_cost,
+            selected_turbine_cost,
             grid_usage * costgrid
         ])
         results.append(result_row)
@@ -281,16 +299,6 @@ def optimization(self):
     selected_turbine_idx = [j for j in range(len(PowerTurbine)) if selected_turbine_type[j].x > 0.5]
     selected_pv_idx = [j for j in range(len(PowerPV)) if selected_pv_type[j].x > 0.5]
 
-
-    print(f"total cost: {total_cost.getValue()}")
-    print(f"total renewable power: {total_renewable_power_production.getValue()}")
-    print(f"C_min: {C_min}")
-    print(f"C_max: {C_max}")
-    print(f"R_min: {R_min}")
-    print(f"R_max: {R_max}")
-    print(f"Normalized Cost: {cost_normalized.getValue()}")
-    print(f"Normalized Renewable: {renewable_normalized.getValue()}")
-
     # Map indices to keys in pv_data_dict
     pv_keys = list(config.pv_data_dict.keys())  # Get the list of keys
     selected_pv_values = [config.pv_data_dict[pv_keys[j]][0] for j in selected_pv_idx]
@@ -298,21 +306,6 @@ def optimization(self):
     # Map indices to keys in wind_data_dict
     wind_keys = list(config.wind_data_dict.keys())  # Get the list of keys
     selected_turbine_values = [config.wind_data_dict[wind_keys[j]][0] for j in selected_turbine_idx]
-
-
-    print(f"Selected Turbine(s): {selected_turbine_values}")
-    print(f"Selected PV(s): {selected_pv_values}")
-
-    # Print the number of each PV and turbine used
-    print(f"Number of selected turbines: {num_turbines.x}")
-    print(f"Number of selected PVs: {num_pvs.x}")
-
-    # Print installation costs
-    print(f"Turbine installation cost: {average_turbine_cost.getValue()}")
-    print(f"PV installation cost: {average_pv_cost.getValue()}")
-
-
-    print(f"Grid yearly cost: {grid_cost.getValue()}")
 
     # Calculate and print total yearly energy generated from each component using actual data
     total_yearly_pv_energy = sum(
@@ -329,15 +322,69 @@ def optimization(self):
         )
         for i in range(len(power_data))
     )
+    # Evaluate Gurobi expressions to get numeric values for total yearly energy
+    total_yearly_pv_energy = total_yearly_pv_energy.getValue()
+    total_yearly_wind_energy = total_yearly_wind_energy.getValue()
+    total_renewable_power_production = total_renewable_power_production.getValue()
+
+    # Calculate turbine installation cost
+    turbine_installation_cost = sum(
+    float(selected_turbine_type[j].x) * float(num_turbines.x) * float(costTurbine[j]) * float(PowerTurbine[j])
+    for j in range(len(PowerTurbine))
+    )
+
+   # Calculate PV installation cost
+    pv_installation_cost = sum(
+        float(selected_pv_type[j].x) * float(num_pvs.x) * float(costPV[j]) * float(PowerPV[j])
+        for j in range(len(PowerPV))
+    )
+
+
+    print(f"total cost: {total_cost.getValue()}")
+    print(f"total renewable power: {total_renewable_power_production}")
+    print(f"C_min: {C_min}")
+    print(f"C_max: {C_max}")
+    print(f"R_min: {R_min}")
+    print(f"R_max: {R_max}")
+    print(f"Normalized Cost: {cost_normalized.getValue()}")
+    print(f"Normalized Renewable: {renewable_normalized.getValue()}")
+
+
+    #print
+    print(f"Selected Turbine(s): {selected_turbine_values}")
+    print(f"Selected PV(s): {selected_pv_values}")
+
+    # Print the number of each PV and turbine used
+    print(f"Number of selected turbines: {num_turbines.x}")
+    print(f"Number of selected PVs: {num_pvs.x}")
+
+    # Print Levelized Average Hourly Costs
+    print(f"Turbine LCOE cost: {average_turbine_cost.getValue()}")
+    print(f"PV LCOE cost: {average_pv_cost.getValue()}")
+    print(f"Grid LCOE cost: {grid_cost.getValue()}")
+
 
 
     global dictionary_transfer
     # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
-    config.dictionary_transfer = [{
-            'solar': selected_pv_values, 'solar_panels': num_pvs.x, 'wind': selected_turbine_values, 'wind_turbines': num_turbines.x, 'price': total_cost.getValue()
-
-        }
-    ]
+    # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
+    config.dictionary_transfer = {
+    'selected_pv_type': selected_pv_values,
+    'selected_turbine_type': selected_turbine_values,
+    'num_pvs': num_pvs.x,
+    'num_turbines': num_turbines.x,
+    'pv_lcoe': average_pv_cost.getValue(),
+    'turbine_lcoe': average_turbine_cost.getValue(),
+    'grid_lcoe': grid_cost.getValue(),
+    'total_lcoe': total_cost.getValue(),
+    'total_yearly_cost': total_yearly_cost.getValue(),
+    'total_yearly_pv_energy': total_yearly_pv_energy,
+    'total_yearly_wind_energy': total_yearly_wind_energy,
+    'total_grid_energy': total_grid_energy,
+    'total_renewable_power_production': total_renewable_power_production,
+    'turbine_installation_cost': turbine_installation_cost,
+    'pv_installation_cost': pv_installation_cost
+    }
     
     print(f"Total yearly PV energy generated (actual): {total_yearly_pv_energy}")
     print(f"Total yearly wind energy generated (actual): {total_yearly_wind_energy}")
