@@ -20,12 +20,9 @@ def optimization(self):
     turbine_lifespan_hours = [24 * 365 * int(config.wind_data_dict[i][2]) for i in config.wind_data_dict]
     pv_lifespan_hours = [24 * 365 * int(config.pv_data_dict[i][2]) for i in config.pv_data_dict]
 
-<<<<<<< HEAD
-=======
     # DER Maximums
     turbine_max = 100
     PV_max = 10000
->>>>>>> 5a3bddeabda46aa3412c8aee033efa112235d366
 
     timestamped_folder = config.timestamped_folder
 
@@ -107,8 +104,8 @@ def optimization(self):
     model.addConstr(gp.quicksum(selected_pv_type[j] for j in range(len(PowerPV))) == 1, "OnePVType")
 
     # Ensure the number of selected PVs and turbines does not exceed the maximum values
-    model.addConstr(num_turbines <= config.turbine_max, "MaxTurbines")
-    model.addConstr(num_pvs <= config.PV_max, "MaxPVs")
+    model.addConstr(num_turbines <= int(config.turbine_max), "MaxTurbines")
+    model.addConstr(num_pvs <= int(config.PV_max), "MaxPVs")
 
     # Constraints
     for i, row in power_data.iterrows():
