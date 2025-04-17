@@ -293,7 +293,9 @@ class Calculate_Button(tk.Frame):
         # Example data for graphs
         graphs = {
             "Monthly Average Power Output": lambda parent: self.plot_monthly_average_power(parent, output_df),
-            "Monthly Power Distribution Breakdown": lambda parent: self.plot_monthly_energy_breakdown(parent, output_df)
+            "Monthly Power Distribution Breakdown": lambda parent: self.plot_monthly_energy_breakdown(parent, output_df),
+            "LCOE Comparison": lambda parent: self.plot_lcoe_comparison(parent),
+            "DER Energy Share": lambda parent: self.plot_der_energy_share(parent)        
             #"Cost Breakdown": self.plot_cost_breakdown
         }
 
@@ -405,4 +407,58 @@ class Calculate_Button(tk.Frame):
         chart_widget.pack(expand=True, fill="both")
         chart_canvas.draw()
 
-       
+    def plot_lcoe_comparison(self, parent):
+        # Extract data from the global dictionary
+        pv_lcoe = config.dictionary_transfer['pv_lcoe']
+        turbine_lcoe = config.dictionary_transfer['turbine_lcoe']
+        grid_lcoe = config.dictionary_transfer['grid_lcoe']
+
+        # Data to plot
+        labels = ['PV', 'Turbine', 'Grid']
+        values = [pv_lcoe, turbine_lcoe, grid_lcoe]
+
+        # Plot the data
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.bar(labels, values, color="orange")
+        ax.set_title("LCOE Comparison", fontsize=14)
+        ax.set_xlabel("Configuration", fontsize=12)
+        ax.set_ylabel("LCOE ($/kWh)", fontsize=12)
+        ax.grid(axis="y", linestyle="--", alpha=0.7)
+
+        # Store current graph to save
+        self.current_fig = fig
+
+        # Add chart to parent frame
+        chart_canvas = FigureCanvasTkAgg(fig, master=parent)
+        chart_widget = chart_canvas.get_tk_widget()
+        chart_widget.pack(expand=True, fill="both")
+        chart_canvas.draw()
+
+
+    def plot_der_energy_share(self, parent):
+        # Extract data from the global dictionary
+        total_renewable_power_production = config.dictionary_transfer['total_renewable_power_production']
+        total_yearly_pv_energy = config.dictionary_transfer['total_yearly_pv_energy']
+        total_yearly_wind_energy = config.dictionary_transfer['total_yearly_wind_energy']
+
+        # Calculate the share of energy from each DER
+        pv_share = (total_yearly_pv_energy / total_renewable_power_production) * 100
+        wind_share = (total_yearly_wind_energy / total_renewable_power_production) * 100
+        labels = ['PV Energy', 'Wind Energy']
+        sizes = [pv_share, wind_share]
+
+        # Plot the pie chart
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90)
+        ax.set_title("DER Energy Share", fontsize=14)
+
+        # Store current graph to save
+        self.current_fig = fig
+
+        # Add chart to parent frame
+        chart_canvas = FigureCanvasTkAgg(fig, master=parent)
+        chart_widget = chart_canvas.get_tk_widget()
+        chart_widget.pack(expand=True, fill="both")
+        chart_canvas.draw()
+
+
