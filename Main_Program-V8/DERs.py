@@ -6,6 +6,7 @@ from tkinter import filedialog, messagebox, ttk
 import config
 import Solar_PV_csv_save
 import Location_Input
+from openpyxl import Workbook, load_workbook
 
 
 class Der_menu_page (tk.Frame):
@@ -148,6 +149,24 @@ class Der_menu_page (tk.Frame):
                                 config.pv_data_dict[config.pv_counter] = pv_data
                                 print(f"PV data saved: {pv_data}")
                                 config.pv_counter += 1
+                                
+                            # Save data to Excel
+                            excel_filename = "pv_data.xlsx"
+                            file_exists = os.path.isfile(excel_filename)
+
+                            if file_exists:
+                                workbook = load_workbook(excel_filename)
+                                sheet = workbook.active
+                            else:
+                                workbook = Workbook()
+                                sheet = workbook.active
+                                # Write header row if new file
+                                sheet.append(["Name", "Size (kW-DC)", "Lifespan (years)", "Efficiency (%)", "Module Type", "Cost ($/kW-DC)"])
+
+                            # Append data row
+                            sheet.append(pv_data)
+                            workbook.save(excel_filename)
+                            print(f"PV data written to {excel_filename}")
                         
                         def existing_PV_configurations():
                             """Open a popup window to display existing PV configurations and allow selection."""
