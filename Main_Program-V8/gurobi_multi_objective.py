@@ -17,12 +17,12 @@ def optimization(self):
     costgrid = config.grid_rate  # Grid energy cost per kWh
 
     # Lifespan in hours (24 hours * 365 days * 10 years)
-    turbine_lifespan_hours = 24 * 365 * config.wind_lifespan
-    pv_lifespan_hours = 24 * 365 * config.pv_lifespan
+    turbine_lifespan_hours = [24 * 365 * int(config.wind_data_dict[i][2]) for i in config.wind_data_dict]
+    pv_lifespan_hours = [24 * 365 * int(config.pv_data_dict[i][2]) for i in config.pv_data_dict]
 
     # DER Maximums
-    turbine_max = 4
-    PV_max = 1000
+    turbine_max = 100
+    PV_max = 2000
 
     timestamped_folder = config.timestamped_folder
 
@@ -83,6 +83,7 @@ def optimization(self):
     selected_pv_type = model.addVars(len(PowerPV), vtype=GRB.BINARY, name="SelectedPVType")
     num_turbines = model.addVar(vtype=GRB.INTEGER, name="NumTurbines")
     num_pvs = model.addVar(vtype=GRB.INTEGER, name="NumPVs")
+
     grid_energy = model.addVars(len(power_data), vtype=GRB.CONTINUOUS, name="GridEnergy")
 
     # New variable for actual solar power used
@@ -143,13 +144,15 @@ def optimization(self):
     for i, row in power_data.iterrows():
         turbine_hourly_cost = gp.quicksum(
             selected_turbine_type[j] * num_turbines * costTurbine[j] * row[f"Turbine-{j+1} Power"]
+            / turbine_lifespan_hours[j]
             for j in range(len(PowerTurbine))
-        ) / turbine_lifespan_hours
+        ) 
 
         pv_hourly_cost = gp.quicksum(
             selected_pv_type[j] * num_pvs * costPV[j] * row[f"PV-{j+1} Solar Power"]
+            / pv_lifespan_hours[j]
             for j in range(len(PowerPV))
-        ) / pv_lifespan_hours
+        ) 
 
         total_turbine_hourly_cost += turbine_hourly_cost
         total_pv_hourly_cost += pv_hourly_cost
@@ -207,6 +210,7 @@ def optimization(self):
         # Set the final combined objective again
         normalized_cost = normalize_cost(total_cost.getValue())
         renewable_normalized = normalize_renewable(total_renewable_power_production.getValue())
+        penalty_expr = num_turbines + num_pvs
         model.setObjective(config.cost_weight * normalized_cost + config.renewable_weight * renewable_normalized, GRB.MAXIMIZE)
         
         model.optimize()
@@ -252,12 +256,21 @@ def optimization(self):
             )
             grid_usage = grid_energy[i].X
 
+            selected_pv_cost = sum(
+                selected_pv_type[j].X * num_pvs.X * costPV[j] * row.get(f"PV-{j+1} Solar Power", 0) / pv_lifespan_hours[j]
+                for j in range(len(PowerPV))
+            )
+            selected_turbine_cost = sum(
+                selected_turbine_type[j].X * num_turbines.X * costTurbine[j] * row.get(f"Turbine-{j+1} Power", 0) / turbine_lifespan_hours[j]
+                for j in range(len(PowerTurbine))
+            )
+
             result_row.extend([
                 actual_pv_power,
                 actual_wind_power,
                 grid_usage,
-                sum(selected_pv_type[j].X * num_pvs.X * costPV[j] * row.get(f"PV-{j+1} Solar Power", 0) for j in range(len(PowerPV))) / pv_lifespan_hours,
-                sum(selected_turbine_type[j].X * num_turbines.X * costTurbine[j] * row.get(f"Turbine-{j+1} Power", 0) for j in range(len(PowerTurbine))) / turbine_lifespan_hours,
+                selected_pv_cost,
+                selected_turbine_cost,
                 grid_usage * costgrid
             ])
 
@@ -265,11 +278,14 @@ def optimization(self):
 
         all_configurations_results.extend(configuration_results)
 
+        
         # Exclude current solution from next iterations
         exclusion_expr = gp.quicksum(selected_turbine_type[j] for j in turbine_selection) + \
                         gp.quicksum(selected_pv_type[j] for j in pv_selection)
         model.addConstr(exclusion_expr <= len(turbine_selection) + len(pv_selection) - 1,
                         name=f"Exclude_Solution_{k+1}")
+        
+
                 # Extract and print results
         print(f"\n🌀 Configuration {k + 1} Summary:")
         print(f"Selected Turbine(s): {[selected_turbine_type[j].X for j in range(len(PowerTurbine))]}")
@@ -315,7 +331,28 @@ def optimization(self):
     print(f"\n📝 Number of unique configurations saved: {unique_configs}")
 
     output_excel_path = os.path.join(timestamped_folder, "DER_Optimization_Results_Final_Version.xlsx")
-    output_df.to_excel(output_excel_path, index=False)
+
+
+    # Check if output_df is not empty
+    if not output_df.empty:
+        # Create an Excel writer object
+        with pd.ExcelWriter(output_excel_path, engine="openpyxl") as writer:
+            # Loop through each unique solution number
+            for solution_number in output_df["Solution Number"].unique():
+                # Filter the DataFrame for the current solution number
+                solution_df = output_df[output_df["Solution Number"] == solution_number]
+                
+                # Write the filtered DataFrame to a separate sheet
+                sheet_name = f"Solution_{int(solution_number)}"
+                solution_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+            # Optionally, write a summary sheet with all configurations
+            output_df.to_excel(writer, sheet_name="Summary", index=False)
+
+        print(f"\n✅ Optimization results for all configurations saved to: {output_excel_path}")
+    else:
+        print("\n⚠️ No data available in output_df to write to Excel.")
+
 
     print(f"\n✅ Optimization results for all configurations saved to: {output_excel_path}")
     print("Configurations saved:", output_df["Solution Number"].unique())

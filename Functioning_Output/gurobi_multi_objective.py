@@ -99,34 +99,48 @@ def optimization(self):
     actual_solar_power_used = model.addVars(len(power_data), vtype=GRB.CONTINUOUS, name="ActualSolarPowerUsed")
     actual_wind_power_used = model.addVars(len(power_data), vtype=GRB.CONTINUOUS, name="ActualWindPowerUsed")
 
-    # Ensure only one type of PV and one type of wind turbine is selected
-    model.addConstr(gp.quicksum(selected_turbine_type[j] for j in range(len(PowerTurbine))) == 1, "OneTurbineType")
-    model.addConstr(gp.quicksum(selected_pv_type[j] for j in range(len(PowerPV))) == 1, "OnePVType")
+    # Ensure only one type of PV and one type of wind turbine is selected (if applicable)
+    if len(PowerTurbine) > 0:
+        model.addConstr(gp.quicksum(selected_turbine_type[j] for j in range(len(PowerTurbine))) <= 1, "OneTurbineType")
+    if len(PowerPV) > 0:
+        model.addConstr(gp.quicksum(selected_pv_type[j] for j in range(len(PowerPV))) <= 1, "OnePVType")
 
     # Ensure the number of selected PVs and turbines does not exceed the maximum values
-    model.addConstr(num_turbines <= turbine_max, "MaxTurbines")
-    model.addConstr(num_pvs <= PV_max, "MaxPVs")
+    if len(PowerTurbine) > 0:
+        model.addConstr(num_turbines <= turbine_max, "MaxTurbines")
+    if len(PowerPV) > 0:
+        model.addConstr(num_pvs <= PV_max, "MaxPVs")
 
     # Constraints
     for i, row in power_data.iterrows():
         # Calculate available wind power
         current_month = int(row["Month"])-1
         current_load_demand = load_demand[current_month]  # Adjust for zero-based index
-
-        model.addConstr(
-            actual_wind_power_used[i] <= gp.quicksum(
-                selected_turbine_type[j] * num_turbines * row[f"Turbine-{j+1} Power"] for j in range(len(PowerTurbine))
-            ),
-            name=f"LimitWindPower_{i}"
-        )
-
-        # Constraint to limit actual solar power to available solar power
-        model.addConstr(
-                actual_solar_power_used[i] <= gp.quicksum(
-                    selected_pv_type[j] * num_pvs * row[f"PV-{j+1} Solar Power"] for j in range(len(PowerPV))
+        
+        # If turbines are available, add wind power constraints
+        if len(PowerTurbine) > 0:
+            model.addConstr(
+                actual_wind_power_used[i] <= gp.quicksum(
+                    selected_turbine_type[j] * num_turbines * row[f"Turbine-{j+1} Power"] for j in range(len(PowerTurbine))
                 ),
-                name=f"LimitSolarPower_{i}"
-        )
+                name=f"LimitWindPower_{i}"
+            )
+        else:
+        # Set actual wind power to 0 if no turbines are used
+            model.addConstr(actual_wind_power_used[i] == 0, name=f"NoWindPower_{i}")
+
+        # If PVs are available, add solar power constraints
+        if len(PowerPV) > 0:
+            model.addConstr(
+                    actual_solar_power_used[i] <= gp.quicksum(
+                        selected_pv_type[j] * num_pvs * row[f"PV-{j+1} Solar Power"] for j in range(len(PowerPV))
+                    ),
+                    name=f"LimitSolarPower_{i}"
+            )
+        else:
+            # Set actual solar power to 0 if no PVs are used
+            model.addConstr(actual_solar_power_used[i] == 0, name=f"NoSolarPower_{i}")
+
         
         # Load balance constraint considering available wind and actual solar power
         model.addConstr(
@@ -143,6 +157,7 @@ def optimization(self):
 
     # Iterate through each hour in the dataset
     for i, row in power_data.iterrows():
+
         # Calculate hourly turbine cost for this hour
         turbine_hourly_cost = gp.quicksum(
             selected_turbine_type[j] * num_turbines * costTurbine[j] * row[f"Turbine-{j+1} Power"]
@@ -156,27 +171,19 @@ def optimization(self):
             for j in range(len(PowerPV))
         ) 
 
-        """
-        grid_hourly_cost = gp.quicksum(
-            grid_energy[j] * costgrid
-            for j in range(len(power_data))
-        )
-        """
-
         # Add the hourly costs to the totals
         total_turbine_hourly_cost += turbine_hourly_cost
         total_pv_hourly_cost += pv_hourly_cost
-        #total_grid_cost += grid_hourly_cost
+        
 
-    # Average the total costs over the length of the dataset
-    average_turbine_cost = total_turbine_hourly_cost / len(power_data)
-    average_pv_cost = total_pv_hourly_cost / len(power_data)
-
-    total_yearly_cost = total_turbine_hourly_cost + total_pv_hourly_cost + gp.quicksum(grid_energy[i] * costgrid for i in range(len(power_data)))
-
+    # Average the total costs over the length of the dataset if applicable
+    average_turbine_cost = total_turbine_hourly_cost / len(power_data) if len(PowerTurbine) > 0 else 0
+    average_pv_cost = total_pv_hourly_cost / len(power_data) if len(PowerPV) > 0 else 0
 
     # levelized average grid cost
     grid_cost = gp.quicksum(grid_energy[i] * costgrid for i in range(len(power_data)))/len(power_data)
+
+    total_yearly_cost = total_turbine_hourly_cost + total_pv_hourly_cost + gp.quicksum(grid_energy[i] * costgrid for i in range(len(power_data)))
 
     # total average levelized hourly cost of the system
     total_cost = average_turbine_cost + average_pv_cost + grid_cost
@@ -225,8 +232,9 @@ def optimization(self):
     def normalize_renewable(renewable_value):
         return (renewable_value - R_min) / (R_max - R_min)
 
-    cost_normalized = normalize_cost(total_cost)
-    renewable_normalized = normalize_renewable(total_renewable_power_production)
+    cost_normalized = normalize_cost(total_cost) if C_max != C_min else 1
+
+    renewable_normalized = normalize_renewable(total_renewable_power_production) if R_max != R_min else 1
 
     # Solve model
     model.setObjective(config.cost_weight * cost_normalized + config.renewable_weight * renewable_normalized, GRB.MAXIMIZE)
@@ -305,35 +313,54 @@ def optimization(self):
     selected_turbine_values = [config.wind_data_dict[wind_keys[j]][0] for j in selected_turbine_idx]
 
     # Calculate and print total yearly energy generated from each component using actual data
-    total_yearly_pv_energy = sum(
-        gp.quicksum(
-            selected_pv_type[j].x * num_pvs.x * power_data.at[i, f"PV-{j+1} Solar Power"]
-            for j in range(len(PowerPV))
+    total_yearly_pv_energy = (
+        sum(
+            gp.quicksum(
+                selected_pv_type[j].x * num_pvs.x * power_data.at[i, f"PV-{j+1} Solar Power"]
+                for j in range(len(PowerPV))
+            )
+            for i in range(len(power_data))
         )
-        for i in range(len(power_data))
+            if len(PowerPV) > 0
+            else 0
     )
-    total_yearly_wind_energy = sum(
-        gp.quicksum(
-            selected_turbine_type[j].x * num_turbines.x * power_data.at[i, f"Turbine-{j+1} Power"]
-            for j in range(len(PowerTurbine))
+        
+    total_yearly_wind_energy = (
+        sum(
+            gp.quicksum(
+                selected_turbine_type[j].x * num_turbines.x * power_data.at[i, f"Turbine-{j+1} Power"]
+                for j in range(len(PowerTurbine))
+            )
+            for i in range(len(power_data))
         )
-        for i in range(len(power_data))
+        if len(PowerTurbine) > 0
+        else 0
     )
+    
     # Evaluate Gurobi expressions to get numeric values for total yearly energy
     total_yearly_pv_energy = total_yearly_pv_energy.getValue()
     total_yearly_wind_energy = total_yearly_wind_energy.getValue()
     total_renewable_power_production = total_renewable_power_production.getValue()
 
     # Calculate turbine installation cost
-    turbine_installation_cost = sum(
-    float(selected_turbine_type[j].x) * float(num_turbines.x) * float(costTurbine[j]) * float(PowerTurbine[j])
-    for j in range(len(PowerTurbine))
+    turbine_installation_cost = (
+        sum(
+            float(selected_turbine_type[j].x) * float(num_turbines.x) * float(costTurbine[j]) * float(PowerTurbine[j])
+            for j in range(len(PowerTurbine))
+        ) 
+        if len(PowerTurbine) > 0
+        else 0
     )
 
+
    # Calculate PV installation cost
-    pv_installation_cost = sum(
-        float(selected_pv_type[j].x) * float(num_pvs.x) * float(costPV[j]) * float(PowerPV[j])
-        for j in range(len(PowerPV))
+    pv_installation_cost =( 
+        sum(
+            float(selected_pv_type[j].x) * float(num_pvs.x) * float(costPV[j]) * float(PowerPV[j])
+            for j in range(len(PowerPV))
+        )
+        if len(PowerPV) > 0
+        else 0
     )
 
 

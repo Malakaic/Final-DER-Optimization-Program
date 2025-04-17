@@ -117,6 +117,7 @@ class Calculate_Button(tk.Frame):
 
         if not project_name:
             config.project_name = "Default_Project"
+            project_folder = os.path.join(os.getcwd(), config.project_name)
             messagebox.showwarning("Warning", "Project name is empty. Using default name.")
 
         else:
