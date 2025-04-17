@@ -29,6 +29,8 @@ timestamped_folder = None
 load_demand = {}
 grid_rate = 0.1  # Default grid rate
 
+turbine_max = 4
+PV_max = 1000
 
 
 cost_weight = 50
