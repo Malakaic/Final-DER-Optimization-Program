@@ -391,24 +391,55 @@ def optimization(self):
 
     global dictionary_transfer
     # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
-    # Store the selected PV and turbine values, number of PVs and turbines, and total cost in the dictionary
-    config.dictionary_transfer = {
-    'selected_pv_type': selected_pv_values,
-    'selected_turbine_type': selected_turbine_values,
-    'num_pvs': num_pvs.x,
-    'num_turbines': num_turbines.x,
-    'pv_lcoe': average_pv_cost.getValue(),
-    'turbine_lcoe': average_turbine_cost.getValue(),
-    'grid_lcoe': grid_cost.getValue(),
-    'total_lcoe': total_cost.getValue(),
-    'total_yearly_cost': total_yearly_cost.getValue(),
-    'total_yearly_pv_energy': total_yearly_pv_energy,
-    'total_yearly_wind_energy': total_yearly_wind_energy,
-    'total_grid_energy': total_grid_energy,
-    'total_renewable_power_production': total_renewable_power_production,
-    'turbine_installation_cost': turbine_installation_cost,
-    'pv_installation_cost': pv_installation_cost
-    }
+    # for both PV and Turbine selections
+    if len(PowerPV) > 0 and len(PowerTurbine) > 0:
+        config.dictionary_transfer = {
+        'selected_pv_type': selected_pv_values,
+        'selected_turbine_type': selected_turbine_values,
+        'num_pvs': num_pvs.x,
+        'num_turbines': num_turbines.x,
+        'pv_lcoe': average_pv_cost.getValue(),
+        'turbine_lcoe': average_turbine_cost.getValue(),
+        'grid_lcoe': grid_cost.getValue(),
+        'total_lcoe': total_cost.getValue(),
+        'total_yearly_cost': total_yearly_cost.getValue(),
+        'total_yearly_pv_energy': total_yearly_pv_energy,
+        'total_yearly_wind_energy': total_yearly_wind_energy,
+        'total_grid_energy': total_grid_energy,
+        'total_renewable_power_production': total_renewable_power_production,
+        'turbine_installation_cost': turbine_installation_cost,
+        'pv_installation_cost': pv_installation_cost
+        }
+    
+    # for only PV selection
+    elif len(PowerPV) > 0 and len(PowerTurbine) == 0:
+        config.dictionary_transfer = {
+        'selected_pv_type': selected_pv_values,
+        'num_pvs': num_pvs.x,
+        'pv_lcoe': average_pv_cost.getValue(),
+        'grid_lcoe': grid_cost.getValue(),
+        'total_lcoe': total_cost.getValue(),
+        'total_yearly_cost': total_yearly_cost.getValue(),
+        'total_yearly_pv_energy': total_yearly_pv_energy,
+        'total_grid_energy': total_grid_energy,
+        'total_renewable_power_production': total_renewable_power_production,
+        'pv_installation_cost': pv_installation_cost
+        }
+
+    # for only Turbine selection
+    elif len(PowerTurbine) > 0 and len(PowerPV) == 0:  
+        config.dictionary_transfer = {
+        'selected_turbine_type': selected_turbine_values,
+        'num_turbines': num_turbines.x,
+        'turbine_lcoe': average_turbine_cost.getValue(),
+        'grid_lcoe': grid_cost.getValue(),
+        'total_lcoe': total_cost.getValue(),
+        'total_yearly_cost': total_yearly_cost.getValue(),
+        'total_yearly_wind_energy': total_yearly_wind_energy,
+        'total_grid_energy': total_grid_energy,
+        'total_renewable_power_production': total_renewable_power_production,
+        'turbine_installation_cost': turbine_installation_cost
+        }
     
     print(f"Total yearly PV energy generated (actual): {total_yearly_pv_energy}")
     print(f"Total yearly wind energy generated (actual): {total_yearly_wind_energy}")

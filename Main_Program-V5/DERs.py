@@ -24,10 +24,25 @@ class Der_menu_page (tk.Frame):
 
             # Define the options for the checkboxes
             options = ["PV", "Wind", "Battery", "Inverter"]
+            
+            # Add input boxes for Max Turbines and Max PVs
+            max_turbines_label = tk.Label(der_frame, text="Max Turbines:", anchor="w")
+            max_turbines_label.pack(anchor="w", padx=5, pady=2)
+            max_turbines_entry = tk.Entry(der_frame)
+            max_turbines_entry.pack(anchor="w", padx=5, pady=2)
+
+            max_pvs_label = tk.Label(der_frame, text="Max PVs:", anchor="w")
+            max_pvs_label.pack(anchor="w", padx=5, pady=2)
+            max_pvs_entry = tk.Entry(der_frame)
+            max_pvs_entry.pack(anchor="w", padx=5, pady=2)
 
             # Function to display the selected options
             def show_selected():
-
+                # Save the max turbines and max PVs values to config variables
+                config.turbine_max = max_turbines_entry.get()
+                config.PV_max = max_pvs_entry.get()
+                print(f"Max Turbines: {config.turbine_max}, Max PVs: {config.PV_max}")
+                
                 # First, remove any previously created frames
                 for child in frame.winfo_children():
                     if isinstance(child, ttk.LabelFrame) and child.cget("text") in options:

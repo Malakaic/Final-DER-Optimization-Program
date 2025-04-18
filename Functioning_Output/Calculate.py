@@ -29,16 +29,24 @@ class Calculate_Button(tk.Frame):
       #  self.location.create_location_section(parent)
     
     def gather_input_data(self):
-        """Retrieve user input data"""
-        
-        #Declare Global Variables
-       # global city, state, country
+        """Retrieve user input data based on the selected mode."""
+        input_mode = self.location_page.input_mode.get()  # Get the selected input mode
 
-        city = self.location_page.city_entry.get()
-        state = self.location_page.state_entry.get()
-        country = self.location_page.country_entry.get()
-
-        return city, state, country
+        if input_mode == "address":
+            # Retrieve city, state, and country
+            city = self.location_page.city_entry.get().strip()
+            state = self.location_page.state_entry.get().strip()
+            country = self.location_page.country_entry.get().strip()
+            return city, state, country, None, None  # Return None for latitude and longitude
+        elif input_mode == "coordinates":
+            # Retrieve latitude and longitude
+            try:
+                latitude = float(self.location_page.latitude_entry.get().strip())
+                longitude = float(self.location_page.longitude_entry.get().strip())
+                return None, None, None, latitude, longitude  # Return None for city, state, and country
+            except ValueError:
+                messagebox.showerror("Error", "Please enter valid numeric values for latitude and longitude.")
+                return None, None, None, None, None
 
     def get_coordinates(self, city, state, country):
         """Retrieve coordinates for the given city, state, and country."""
@@ -101,7 +109,13 @@ class Calculate_Button(tk.Frame):
         """Save the project name and proceed with calculations."""
         print("Saving project name...")
         project_name = self.project_name_entry.get()
-        config.project_name = project_name
+        if not project_name:
+            # Use the default project name if no name is provided
+            config.project_name = "Default_Project"
+            messagebox.showwarning("Warning", "Project name is empty. Using default name.")
+        else:
+            config.project_name = project_name
+       
         # Create the project folder path
         project_folder = os.path.join(os.getcwd(), config.project_name)
 
@@ -115,14 +129,6 @@ class Calculate_Button(tk.Frame):
         # Update the config with the timestamped folder path
         config.timestamped_folder = timestamped_folder
 
-        if not project_name:
-            config.project_name = "Default_Project"
-            project_folder = os.path.join(os.getcwd(), config.project_name)
-            messagebox.showwarning("Warning", "Project name is empty. Using default name.")
-
-        else:
-            config.project_name = project_name
-
         # Close the project name window
         self.project_name_window.destroy()
 
@@ -130,18 +136,25 @@ class Calculate_Button(tk.Frame):
         self.perform_calculations()
 
     def perform_calculations(self):
-        """Perform calculations, print results, and open results window."""
 
-        city, state, country = self.gather_input_data()
+        city, state, country, latitude, longitude = self.gather_input_data()
 
-        if not city or not state or not country:
-            self.open_results_window("Error", "Please enter a valid city, state, and country.")
-            return
+        if city and state and country:
+                # Address mode: Get coordinates from the address
+                latitude, longitude = self.get_coordinates(city, state, country)
+                if latitude is None or longitude is None:
+                    self.open_results_window("Error", "Could not retrieve coordinates for the given address.")
+                    return
+        elif latitude is not None and longitude is not None:
+                # Coordinates mode: Use the provided latitude and longitude
+                pass
+        else:
+                # Invalid input
+                self.open_results_window("Error", "Please provide valid location inputs.")
+                return
 
-        latitude, longitude = self.get_coordinates(city, state, country)
-
-        if latitude is not None and longitude is not None:
-            try:
+        
+        try:
                 print("pulling wind data")
                 for i in config.wind_data_dict:
                     print(f"Processing wind data for configuration {i}: {config.wind_data_dict[i]}")
@@ -185,11 +198,10 @@ class Calculate_Button(tk.Frame):
                 gurobi_multi_objective.optimization(self)
                 configurations = config.dictionary_transfer
                 self.open_results_window(configurations)
-            except ValueError as e:
+        except ValueError as e:
                 self.open_results_window(f"Error: {e}")
         
-        else:
-            self.open_results_window("Error", "Could not retrieve coordinates.")
+       
     print("Calculations completed.")
 
 
@@ -241,21 +253,30 @@ class Calculate_Button(tk.Frame):
 
 
         # Extract data from the global dictionary
-        selected_pv_type = config.dictionary_transfer['selected_pv_type']
-        selected_turbine_type = config.dictionary_transfer['selected_turbine_type']
-        num_pvs = config.dictionary_transfer['num_pvs']
-        num_turbines = config.dictionary_transfer['num_turbines']
-        pv_lcoe = config.dictionary_transfer['pv_lcoe']
-        turbine_lcoe = config.dictionary_transfer['turbine_lcoe']
-        grid_lcoe = config.dictionary_transfer['grid_lcoe']
-        total_lcoe = config.dictionary_transfer['total_lcoe']
-        total_yearly_cost = config.dictionary_transfer['total_yearly_cost']
-        total_yearly_pv_energy = config.dictionary_transfer['total_yearly_pv_energy']
-        total_yearly_wind_energy = config.dictionary_transfer['total_yearly_wind_energy']  
-        total_grid_energy = config.dictionary_transfer['total_grid_energy']
-        total_renewable_power_production = config.dictionary_transfer['total_renewable_power_production']
-        turbine_installation_cost = config.dictionary_transfer['turbine_installation_cost']
-        pv_installation_cost = config.dictionary_transfer['pv_installation_cost']
+        # Ensure selected_turbine_type is an iterable
+        selected_turbine_type = config.dictionary_transfer.get('selected_turbine_type', [])
+        if selected_turbine_type is None:
+            selected_turbine_type = []
+
+        # Ensure selected_pv_type is an iterable
+        selected_pv_type = config.dictionary_transfer.get('selected_pv_type', [])
+        if selected_pv_type is None:
+            selected_pv_type = []
+
+        # Extract other values from the dictionary, providing defaults if not found
+        num_pvs = config.dictionary_transfer.get('num_pvs', 0)
+        num_turbines = config.dictionary_transfer.get('num_turbines', 0)
+        pv_lcoe = config.dictionary_transfer.get('pv_lcoe', 0)
+        turbine_lcoe = config.dictionary_transfer.get('turbine_lcoe', 0)
+        grid_lcoe = config.dictionary_transfer.get('grid_lcoe', 0)
+        total_lcoe = config.dictionary_transfer.get('total_lcoe', 0)
+        total_yearly_cost = config.dictionary_transfer.get('total_yearly_cost', 0)
+        total_yearly_pv_energy = config.dictionary_transfer.get('total_yearly_pv_energy', 0)
+        total_yearly_wind_energy = config.dictionary_transfer.get('total_yearly_wind_energy', 0)
+        total_grid_energy = config.dictionary_transfer.get('total_grid_energy', 0)
+        total_renewable_power_production = config.dictionary_transfer.get('total_renewable_power_production', 0)
+        turbine_installation_cost = config.dictionary_transfer.get('turbine_installation_cost', 0)
+        pv_installation_cost = config.dictionary_transfer.get('pv_installation_cost', 0)
 
         # Load the output Excel file
         output_excel_path = os.path.join(config.timestamped_folder, "DER_Optimization_Results_Final_Version.xlsx")
@@ -291,7 +312,7 @@ class Calculate_Button(tk.Frame):
         tk.Label(power_frame, text=f"Total Grid Energy: {total_grid_energy:.2f} kWh").pack(anchor='w')
         tk.Label(power_frame, text=f"Total Renewable Power Production: {total_renewable_power_production:.2f} kWh").pack(anchor='w')
 
-        # Example data for graphs
+        # Graph dropdown menu
         graphs = {
             "Monthly Average Power Output": lambda parent: self.plot_monthly_average_power(parent, output_df),
             "Monthly Power Distribution Breakdown": lambda parent: self.plot_monthly_energy_breakdown(parent, output_df)

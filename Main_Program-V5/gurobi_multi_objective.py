@@ -104,8 +104,8 @@ def optimization(self):
     model.addConstr(gp.quicksum(selected_pv_type[j] for j in range(len(PowerPV))) == 1, "OnePVType")
 
     # Ensure the number of selected PVs and turbines does not exceed the maximum values
-    model.addConstr(num_turbines <= turbine_max, "MaxTurbines")
-    model.addConstr(num_pvs <= PV_max, "MaxPVs")
+    model.addConstr(num_turbines <= int(config.turbine_max), "MaxTurbines")
+    model.addConstr(num_pvs <= int(config.PV_max), "MaxPVs")
 
     # Constraints
     for i, row in power_data.iterrows():

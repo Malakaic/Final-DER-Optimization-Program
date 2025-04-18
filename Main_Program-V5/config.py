@@ -29,7 +29,9 @@ load_demand = [1000, 1200, 2000, 2500, 3200, 3800, 4000, 3500, 2800, 1400, 1200,
 #load_demand = {}
 grid_rate = 0.01  # Default grid rate
 
-
+# DER Maximums
+turbine_max = 4
+PV_max = 1000
 
 cost_weight = 50
 renewable_weight = 50
