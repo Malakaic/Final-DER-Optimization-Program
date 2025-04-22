@@ -30,27 +30,20 @@ load_demand = [1000, 1200, 2000, 2500, 3200, 3800, 4000, 3500, 2800, 1400, 1200,
 grid_rate = 0.01  # Default grid rate
 
 
-# DER Maximums
-turbine_max = 4
-PV_max = 1000
 
 cost_weight = 50
 renewable_weight = 50
 
-# Dictionary to store PV data (name, capacity, lifespan, efficiency, module type, cost)
-
 pv_data_existing_configurations = {
-    0: ["LONGi-Hi-MO-6", 435, 25, 22, "Monocrystalline", 550], 
-    1: ["First-Solar-Series-7", 510, 30, 18, "Thin-Film", 450],
-    2: ["Canadian-Solar-HiKu-7", 665, 25, 21.4, "Monocrystalline", 450]
+    0: ["Pv-1", 150, 20, 21.6, "Monocrystalline", 200], 
+    1: ["Pv-2", 200, 22, 22.4, "Polycrystalline", 250],
+    2: ["Pv-3", 250, 18, 25.7, "Thin-Film", 300]
 } 
 
-# Dictionary to store Wind data (name, capacity, lifespan, efficiency, hub height, rotor diameter, cost)
-
 wind_data_existing_configurations = {
-    0: ["GE-2.8-127", 2800, 27, 45, 100, 127, 1600],
-    1: ["Siemens-Gamesa-SG-6.6-55", 6600, 25, 50, 100, 155, 1400],
-    2: ["Vestas-V150-4.2", 4200, 28, 47, 100, 150, 1500]
+    0: ["Turbine-1", 1500, 20, 55.7, 120, 65, 2000],
+    1: ["Turbine-2", 2000, 18, 67.8, 120, 72, 3000],
+    2: ["Turbine-3", 3000, 22, 43.5, 120, 71, 4000]
 }
 
 dictionary_transfer = {} # Dictionary to store the transfer of data between pages

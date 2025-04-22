@@ -107,11 +107,9 @@ def optimization(self):
 
     # Ensure the number of selected PVs and turbines does not exceed the maximum values
     if len(PowerTurbine) > 0:
-        model.addConstr(num_turbines <= int(config.turbine_max), "MaxTurbines")
+        model.addConstr(num_turbines <= turbine_max, "MaxTurbines")
     if len(PowerPV) > 0:
-        model.addConstr(num_pvs <= int(config.PV_max), "MaxPVs")
-
-
+        model.addConstr(num_pvs <= PV_max, "MaxPVs")
 
     # Constraints
     for i, row in power_data.iterrows():
@@ -133,6 +131,18 @@ def optimization(self):
 
         # If PVs are available, add solar power constraints
         if len(PowerPV) > 0:
+            # Debugging prints
+            for j in range(len(PowerPV)):
+                print(f"selected_pv_type[{j}]: {selected_pv_type[j]}")  # Check the value of selected_pv_type[j]
+                print(f"num_pvs: {num_pvs}")  # Check the value of num_pvs
+                print(f"row[f'PV-{j+1} Solar Power']: {row[f'PV-{j+1} Solar Power']}")  # Check the solar power value
+
+                # Example for handling NaN values in the power data before optimization
+            if pd.isna(row[f"PV-{j+1} Solar Power"]):
+                print(f"Replacing NaN in 'PV-{j+1} Solar Power' with 0 at row {i}")
+                row[f"PV-{j+1} Solar Power"] = 0  # Replace NaN with 0 or another default value
+
+
             model.addConstr(
                     actual_solar_power_used[i] <= gp.quicksum(
                         selected_pv_type[j] * num_pvs * row[f"PV-{j+1} Solar Power"] for j in range(len(PowerPV))
@@ -166,6 +176,7 @@ def optimization(self):
             / turbine_lifespan_hours[j]
             for j in range(len(PowerTurbine))
         ) 
+        
 
         pv_hourly_cost = gp.quicksum(
             selected_pv_type[j] * num_pvs * costPV[j] * row[f"PV-{j+1} Solar Power"]
@@ -242,6 +253,7 @@ def optimization(self):
     model.setObjective(config.cost_weight * cost_normalized + config.renewable_weight * renewable_normalized, GRB.MAXIMIZE)
     model.optimize()
 
+    
     # Store results
     results = []
     total_grid_energy = 0
